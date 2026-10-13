@@ -411,3 +411,7 @@ zh.recaptcha = { title: "reCAPTCHA v3 可信分", desc: "Google 行为评分(1.0
 zh.platform = { title: "平台预设", names: { claude: "Claude", openai: "OpenAI", media: "流媒体", tiktok: "TikTok" }, notes: { claude: "关注地区门控与 Cloudflare 信任;双端(网页+Code)同档案", openai: "与 Claude 同在 CF 后;关注机房型出口与账号注册画像", media: "流媒体解锁看住宅属性与原生性;机房多为 caution", tiktok: "机房容忍度最低的平台;注册即绑定区域,IP/时区/语言需自洽" } };
 
 zh.toolsBox = { title: "检测工具箱", desc: "按需手动触发:测速 / Turnstile 信任 / 出口矩阵 / 请求头等" };
+
+zh.speed.unreachable = "不可达";
+zh.speed.blockedNote = "测速端点全部失败:常见于分流规则将 speed.cloudflare.com 甩直连后被重置——建议将其加入代理规则";
+zh.speed.pingFailed = "全球延迟探测失败:Globalping 限流或出口不可达。";

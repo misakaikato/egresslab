@@ -25,10 +25,19 @@ export async function edgeLatency(): Promise<number | null> {
   return Math.round(times[Math.floor(times.length / 2)]);
 }
 
-export async function downSpeed(bytes = 20_000_000): Promise<number | null> {
+// CF 专用端点失败(部分分流网络会重置该域名)时回退 jsDelivr CDN(CORS ✓)
+export async function downSpeed(bytes = 20_000_000): Promise<{ mbps: number | null; via: string | null }> {
+  const r1 = await downVia(`https://speed.cloudflare.com/__down?bytes=${bytes}`, bytes);
+  if (r1 !== null) return { mbps: r1, via: "speed.cloudflare.com" };
+  const r2 = await downVia(`https://cdn.jsdelivr.net/gh/lionsoul2014/ip2region@master/data/ip2region_v4.xdb?cb=${Date.now()}`, 11_000_000);
+  if (r2 !== null) return { mbps: r2, via: "jsDelivr CDN" };
+  return { mbps: null, via: null };
+}
+
+async function downVia(url: string, bytes: number): Promise<number | null> {
   try {
     const t0 = performance.now();
-    const r = await fetch(`https://speed.cloudflare.com/__down?bytes=${bytes}`, { cache: "no-store", signal: AbortSignal.timeout(30000) });
+    const r = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(30000) });
     const reader = r.body?.getReader();
     if (!reader) {
       await r.arrayBuffer();
@@ -64,7 +73,7 @@ export async function globalPing(targetIp: string): Promise<{ loc: string; ms: n
     const res = await fetch("https://api.globalping.io/v1/measurements", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ target: targetIp, type: "ping", locations, limit: 6, measurementOptions: { packets: 3 } }),
+      body: JSON.stringify({ target: targetIp, type: "ping", locations: locations.map((l) => ({ magic: l })), limit: 6, measurementOptions: { packets: 3 } }),
       signal: AbortSignal.timeout(15000),
     });
     if (!res.ok) return [];
@@ -75,8 +84,9 @@ export async function globalPing(targetIp: string): Promise<{ loc: string; ms: n
     }
     if (!Array.isArray(m?.results)) return [];
     return m.results.map((r: any) => {
-      const avg = r?.result?.avg;
-      return { loc: String(r?.location?.magic ?? r?.probe?.location?.network ?? "?"), ms: typeof avg === "number" ? Math.round(avg) : null };
+      const avg = r?.result?.avg ?? r?.result?.stats?.avg;
+      const p = r?.probe || {};
+      return { loc: String(p.city || p.country || p.network || "?"), ms: typeof avg === "number" ? Math.round(avg) : null };
     });
   } catch {
     return [];

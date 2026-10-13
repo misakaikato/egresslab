@@ -405,3 +405,7 @@ en.recaptcha = { title: "reCAPTCHA v3 score", desc: "Google behavioral score (1.
 en.platform = { title: "Platform preset", names: { claude: "Claude", openai: "OpenAI", media: "Streaming", tiktok: "TikTok" }, notes: { claude: "Watch region gates and CF trust; web + Code share one profile", openai: "Also behind CF; watch DC exits and signup profile", media: "Unlocking depends on residential & native attributes", tiktok: "Lowest DC tolerance; region binds at signup — IP/TZ/lang must cohere" } };
 
 en.toolsBox = { title: "Detection toolbox", desc: "Manual tools: speed test / Turnstile trust / egress matrix / headers" };
+
+en.speed.unreachable = "unreachable";
+en.speed.blockedNote = "All speed endpoints failed: common when routing rules send speed.cloudflare.com direct and it gets reset — add it to your proxy rules";
+en.speed.pingFailed = "Global latency failed: Globalping rate limit or unreachable exit.";

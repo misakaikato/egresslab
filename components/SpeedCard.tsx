@@ -6,13 +6,15 @@ import { downSpeed, upSpeed, edgeLatency, globalPing } from "@/lib/detect/speed"
 
 export default function SpeedCard({ targetIp, t }: { targetIp: string; t: any }) {
   const [busy, setBusy] = useState<string | null>(null);
-  const [down, setDown] = useState<number | null>(null);
+  const [down, setDown] = useState<{ mbps: number | null; via: string | null } | null>(null);
+  const [ran, setRan] = useState(false);
   const [up, setUp] = useState<number | null>(null);
   const [lat, setLat] = useState<number | null>(null);
   const [ping, setPing] = useState<{ loc: string; ms: number | null }[]>([]);
 
   const runSpeed = async () => {
     setBusy("speed");
+    setRan(true);
     const [d, u, l] = await Promise.all([downSpeed(), upSpeed(), edgeLatency()]);
     setDown(d);
     setUp(u);
@@ -43,12 +45,16 @@ export default function SpeedCard({ targetIp, t }: { targetIp: string; t: any })
           {t.runPing}
         </button>
       </div>
-      {down !== null || up !== null || lat !== null ? (
+      {ran ? (
         <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-[12.5px] fade-in">
-          {down !== null ? <span className="text-muted">{t.down}: <b className="text-ink">{down} Mbps</b></span> : null}
-          {up !== null ? <span className="text-muted">{t.up}: <b className="text-ink">{up} Mbps</b></span> : null}
-          {lat !== null ? <span className="text-muted">{t.latency}: <b className="text-ink">{lat} ms</b></span> : null}
+          <span className="text-muted">{t.down}: {down?.mbps != null ? <b className="text-ink">{down.mbps} Mbps{down.via ? <span className="text-[10px] text-muted"> ({down.via})</span> : null}</b> : <b style={{ color: "var(--bad)" }}>{t.unreachable}</b>}</span>
+          <span className="text-muted">{t.up}: {up != null ? <b className="text-ink">{up} Mbps</b> : <b style={{ color: "var(--bad)" }}>{t.unreachable}</b>}</span>
+          <span className="text-muted">{t.latency}: {lat != null ? <b className="text-ink">{lat} ms</b> : <b style={{ color: "var(--bad)" }}>{t.unreachable}</b>}</span>
+          {down?.mbps == null && up == null ? <p className="basis-full text-[11px]" style={{ color: "var(--warn)" }}>{t.blockedNote}</p> : null}
         </div>
+      ) : null}
+      {ran && !busy && ping.length === 0 ? (
+        <p className="mt-3 pt-3 border-t border-line text-[11.5px] fade-in" style={{ color: "var(--warn)" }}>{t.pingFailed}</p>
       ) : null}
       {ping.length ? (
         <div className="mt-3 pt-3 border-t border-line grid grid-cols-2 gap-x-4 gap-y-1 fade-in">

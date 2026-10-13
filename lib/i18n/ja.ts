@@ -405,3 +405,7 @@ ja.recaptcha = { title: "reCAPTCHA v3 スコア", desc: "Google 行動スコア(
 ja.platform = { title: "プラットフォーム presets", names: { claude: "Claude", openai: "OpenAI", media: "ストリーミング", tiktok: "TikTok" }, notes: { claude: "地域ゲートと CF 信頼に注目;web と Code は同一档案", openai: "同じく CF 背後;DC 出口と登録 profile に注意", media: "解除は住宅・ネイティブ性次第", tiktok: "DC 許容度最低;登録時に地域固定——IP/TZ/言語の整合を" } };
 
 ja.toolsBox = { title: "検査ツールボックス", desc: "手動ツール:スピードテスト / Turnstile / 出口マトリクス / ヘッダー" };
+
+ja.speed.unreachable = "到達不可";
+ja.speed.blockedNote = "測速端点が全滅:分流ルールで speed.cloudflare.com が直結になり破棄された場合が多い——プロキシルールに追加を";
+ja.speed.pingFailed = "全球遅延失敗:Globalping 制限または出口到達不可。" ;
