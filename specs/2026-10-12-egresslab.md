@@ -1,4 +1,4 @@
-# 规格:EgressLab — Claude IP 风险自检工具(自托管)
+# 规格:ExitLens — Claude IP 风险自检工具(自托管)
 
 ## 背景与目标
 自托管 Web 工具:浏览器端检测当前网络在 Claude/Anthropic 风控视角下的风险(出口 IP、VPN/代理/机房识别、三域名出口一致性、WebRTC 泄漏、时区/语言/字体等浏览器环境、自动化特征),服务端聚合多源免费 IP 情报,输出 0–100 评分与 6 维明细。
@@ -15,7 +15,7 @@
 
 ## 假设
 1. 三语:zh-CN 默认,en、ja;`/` 由 middleware 302 到 `/zh`。
-2. 存储:Node 内置 `node:sqlite`(DatabaseSync)单文件 `data/egresslab.db`,启动时自动建目录建表;data/ 整体 gitignore。
+2. 存储:Node 内置 `node:sqlite`(DatabaseSync)单文件 `data/exitlens.db`,启动时自动建目录建表;data/ 整体 gitignore。
 3. MVP 免费源:ipwho.is(geo+ASN)、ip-api.com(geo+proxy/hosting/mobile 旗标)、rdap.org(注册机构名)、Tor 官方出口表(check.torproject.org/torbulkexitlist)、DNSBL(b.barracudacentral.org + dnsbl.sorbs.net,尽力而为)。
 4. Mullvad 识别不依赖列表:ASN/org/ISP 匹配 /mullvad/i 即 official_exit='mullvad';iCloud 专用代理同理匹配 org 文本。
 5. Tor 列表优先读 `data/lists/tor-exits.txt`(scripts/update-tor.sh 产出),无文件在线拉取并缓存 24h(intel_cache 表)。
@@ -27,7 +27,7 @@
 全新项目,无既有代码。评分权重与检测流程为本规格自定义设计,已固化于此,直接按规格施工。
 
 ## 设计
-### 数据模型(SQLite,data/egresslab.db)
+### 数据模型(SQLite,data/exitlens.db)
 - rep_ip(ip TEXT PK, first_seen INT, last_seen INT, check_count INT DEFAULT 0, last_score INT, last_result_json TEXT)
 - rep_events(id INTEGER PK AUTOINCREMENT, ip TEXT, ts INT, kind TEXT CHECK(kind IN('check','feedback','drift')), note TEXT, score INT)
 - honeypot_hits(id INTEGER PK AUTOINCREMENT, ts INT, src_ip TEXT, sensor TEXT, proto TEXT, detail TEXT)

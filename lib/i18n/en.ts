@@ -1,7 +1,7 @@
 // English
 const en: any = {
-  meta: { title: "EgressLab · Claude IP Risk Check", desc: "See yourself the way Claude does: egress region, VPN/proxy/datacenter detection, exit consistency, WebRTC leaks and browser environment." },
-  nav: { brand: "EgressLab", tag: "Claude egress risk check" },
+  meta: { title: "ExitLens · Claude IP Risk Check", desc: "See yourself the way Claude does: egress region, VPN/proxy/datacenter detection, exit consistency, WebRTC leaks and browser environment." },
+  nav: { brand: "ExitLens", tag: "Claude egress risk check" },
   hero: {
     badge: "Self-hosted · your data stays on your machine",
     title: "What does Claude see when it sees you?",

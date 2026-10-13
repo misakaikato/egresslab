@@ -51,9 +51,9 @@ function canvasFingerprint(): string {
     ctx.fillStyle = "#f60";
     ctx.fillRect(0, 0, 110, 20);
     ctx.fillStyle = "#069";
-    ctx.fillText("EgressLab \u6307\u7eb9 fp 42\xb0C \u4e2d\u6587", 2, 2);
+    ctx.fillText("ExitLens \u6307\u7eb9 fp 42\xb0C \u4e2d\u6587", 2, 2);
     ctx.fillStyle = "rgba(102,204,0,0.7)";
-    ctx.fillText("EgressLab \u6307\u7eb9 fp 42\xb0C \u4e2d\u6587", 4, 18);
+    ctx.fillText("ExitLens \u6307\u7eb9 fp 42\xb0C \u4e2d\u6587", 4, 18);
     ctx.strokeStyle = "#c4552d";
     ctx.beginPath();
     ctx.bezierCurveTo(10, 55, 120, 10, 260, 40);

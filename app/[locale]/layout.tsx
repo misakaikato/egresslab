@@ -24,7 +24,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var p=localStorage.getItem("egresslab:theme")||"system";var d=p==="dark"||p!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches;document.documentElement.classList.toggle("dark",d)}catch(e){}})()`,
+            __html: `(function(){try{var p=localStorage.getItem("exitlens:theme")||localStorage.getItem("egresslab:theme")||"system";var d=p==="dark"||p!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches;document.documentElement.classList.toggle("dark",d)}catch(e){}})()`,
           }}
         />
       </head>
@@ -32,7 +32,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
         <header className="sticky top-0 z-40 backdrop-blur border-b border-line" style={{ background: "color-mix(in srgb, var(--bg) 82%, transparent)" }}>
           <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between">
             <div className="flex items-baseline gap-2.5">
-              <span className="text-ink flex items-center gap-1.5 -translate-y-px"><Logo size={20} /><span className="font-display text-lg font-bold tracking-tight">EgressLab</span></span>
+              <span className="text-ink flex items-center gap-1.5 -translate-y-px"><Logo size={20} /><span className="font-display text-lg font-bold tracking-tight">ExitLens</span></span>
               <span className="text-xs text-muted hidden sm:inline">{dict(locale).nav.tag}</span>
             </div>
             <div className="flex items-center gap-2">

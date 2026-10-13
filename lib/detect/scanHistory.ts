@@ -12,12 +12,13 @@ export interface ScanRecord {
   fpHash?: string;
 }
 
-const KEY = "egresslab:scan-history";
+const KEY = "exitlens:scan-history";
 const MAX = 50;
 
 export function loadScans(): ScanRecord[] {
   try {
-    const arr = JSON.parse(localStorage.getItem(KEY) || "[]");
+    const raw = localStorage.getItem(KEY) || localStorage.getItem("egresslab:scan-history") || "[]";
+    const arr = JSON.parse(raw);
     return Array.isArray(arr) ? arr.slice(-MAX) : [];
   } catch {
     return [];

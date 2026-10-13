@@ -7,7 +7,7 @@ import { Globe, Moon, Sun, Github, Star } from "lucide-react";
 export function GithubLink() {
   return (
     <a
-      href="https://github.com/misakaikato/egresslab"
+      href="https://github.com/misakaikato/exitlens"
       target="_blank"
       rel="noopener"
       title="GitHub · 如果有用请点个 Star"
@@ -49,7 +49,7 @@ export function ThemeToggle() {
     setDark(next);
     document.documentElement.classList.toggle("dark", next);
     try {
-      localStorage.setItem("egresslab:theme", next ? "dark" : "light");
+      localStorage.setItem("exitlens:theme", next ? "dark" : "light");
     } catch {}
   };
   return (

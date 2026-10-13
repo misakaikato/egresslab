@@ -61,11 +61,11 @@ export interface HistoryVerdict {
   trail: string[]; // 最近国家轨迹(新→旧,去重相邻)
 }
 
-const LS_KEY = "egresslab:exit-history";
+const LS_KEY = "exitlens:exit-history";
 
 export function loadHistory(): ExitEntry[] {
   try {
-    const raw = localStorage.getItem(LS_KEY);
+    const raw = localStorage.getItem(LS_KEY) ?? localStorage.getItem("egresslab:exit-history");
     const arr = raw ? (JSON.parse(raw) as ExitEntry[]) : [];
     return Array.isArray(arr) ? arr.slice(-30) : [];
   } catch {

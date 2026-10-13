@@ -10,7 +10,7 @@ export async function GET() {
   try {
     const res = await fetch("https://status.anthropic.com/api/v2/summary.json", {
       cache: "no-store",
-      headers: { "user-agent": "egresslab/0.1" },
+      headers: { "user-agent": "exitlens/0.1" },
       signal: AbortSignal.timeout(10000),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);

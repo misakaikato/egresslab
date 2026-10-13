@@ -1,7 +1,7 @@
 // 中文(基准字典)
 const zh: any = {
-  meta: { title: "EgressLab · Claude IP 风险自检", desc: "从 Claude 的视角检查你的网络:出口地区、VPN/代理/机房识别、三域名出口一致性、WebRTC 泄漏与浏览器环境。" },
-  nav: { brand: "EgressLab", tag: "Claude 出口风险自检" },
+  meta: { title: "ExitLens · Claude IP 风险自检", desc: "从 Claude 的视角检查你的网络:出口地区、VPN/代理/机房识别、三域名出口一致性、WebRTC 泄漏与浏览器环境。" },
+  nav: { brand: "ExitLens", tag: "Claude 出口风险自检" },
   hero: {
     badge: "本地自托管 · 数据不出你的机器",
     title: "Claude 看到的你,是什么样子?",

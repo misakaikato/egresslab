@@ -1,4 +1,4 @@
-// 六维评分引擎:权重与阈值定义见 specs/2026-10-12-egresslab.md
+// 六维评分引擎:权重与阈值定义见 specs/2026-10-12-exitlens.md
 import type { Dimension, ScoreInput, ScoreResult } from "./types";
 import { isSupportedCountry } from "./countries";
 

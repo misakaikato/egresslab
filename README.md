@@ -1,4 +1,4 @@
-# EgressLab
+# ExitLens
 
 Claude IP 风险自检工具:从 Claude 的视角检查你的网络出口与浏览器环境。
 
@@ -93,7 +93,7 @@ scripts/update-tor.sh
 scripts/update-local-dbs.sh
 ```
 
-信誉库 `data/egresslab.db` 随使用自动积累;换机迁移拷贝该文件即可。
+信誉库 `data/exitlens.db` 随使用自动积累;换机迁移拷贝该文件即可。
 
 ## 数据流向
 

@@ -52,9 +52,9 @@ export default function Detector({ locale }: { locale: string }) {
   const [dnsCheck, setDns] = useState<DnsCheck | null>(null);
   const [mode, setMode] = useState<"simple" | "pro">("simple");
   useEffect(() => {
-    try { const v = localStorage.getItem("egresslab:view"); if (v === "pro" || v === "simple") setMode(v); } catch {}
+    try { const v = localStorage.getItem("exitlens:view") ?? localStorage.getItem("egresslab:view"); if (v === "pro" || v === "simple") setMode(v); } catch {}
   }, []);
-  const switchMode = (m: "simple" | "pro") => { setMode(m); try { localStorage.setItem("egresslab:view", m); } catch {} };
+  const switchMode = (m: "simple" | "pro") => { setMode(m); try { localStorage.setItem("exitlens:view", m); } catch {} };
   const [rep, setRep] = useState<RepData | null>(null);
   const [status, setStatus] = useState<{ indicator: string; description: string; components: { name: string; status: string }[]; fetched_at: string } | null>(null);
   const [statusOpen, setStatusOpen] = useState(false);
@@ -218,7 +218,7 @@ export default function Detector({ locale }: { locale: string }) {
       blob = new Blob([JSON.stringify(snap, null, 2)], { type: "application/json" });
     } else {
       const L: string[] = [];
-      L.push(`# EgressLab 报告 · ${snap.ts}`);
+      L.push(`# ExitLens 报告 · ${snap.ts}`);
       L.push(`\n**评分 ${score.score}/100 · ${score.level}${score.gate ? ` · gate: ${score.gate}` : ""} · 出口地区 ${score.region || "—"}**\n`);
       L.push(`| 维度 | 得分 | 判定 |\n|---|---|---|`);
       for (const d of snap.dimensions) L.push(`| ${d.id} | ${d.frac === null ? "N/A" : `${d.points}/${d.weight}`} | ${d.code} |`);
@@ -232,7 +232,7 @@ export default function Detector({ locale }: { locale: string }) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `egresslab-report-${Date.now()}.${fmt}`;
+    a.download = `exitlens-report-${Date.now()}.${fmt}`;
     a.click();
     URL.revokeObjectURL(url);
   };

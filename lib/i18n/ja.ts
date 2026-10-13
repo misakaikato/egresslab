@@ -1,7 +1,7 @@
 // 日本語
 const ja: any = {
-  meta: { title: "EgressLab · Claude IP リスクチェック", desc: "Claude から見たあなたのネットワークを検査:出口地域、VPN/プロキシ/データセンター判定、出口一致性、WebRTC リーク、ブラウザ環境。" },
-  nav: { brand: "EgressLab", tag: "Claude 出口リスク検査" },
+  meta: { title: "ExitLens · Claude IP リスクチェック", desc: "Claude から見たあなたのネットワークを検査:出口地域、VPN/プロキシ/データセンター判定、出口一致性、WebRTC リーク、ブラウザ環境。" },
+  nav: { brand: "ExitLens", tag: "Claude 出口リスク検査" },
   hero: {
     badge: "セルフホスト · データはローカルから出ません",
     title: "Claude が見ている「あなた」とは?",

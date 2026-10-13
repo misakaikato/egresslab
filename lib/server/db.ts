@@ -1,10 +1,12 @@
 // SQLite(node:sqlite)初始化:自建信誉库 + 蜜罐 + 情报缓存
 import { DatabaseSync } from "node:sqlite";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, existsSync } from "node:fs";
 import path from "node:path";
 
 const DATA_DIR = path.join(process.cwd(), "data");
-const DB_PATH = path.join(DATA_DIR, "egresslab.db");
+const DB_PATH = existsSync(path.join(DATA_DIR, "exitlens.db"))
+  ? path.join(DATA_DIR, "exitlens.db")
+  : path.join(DATA_DIR, "egresslab.db"); // 旧文件名兼容,避免升级丢数据
 
 let db: DatabaseSync | null = null;
 
