@@ -268,7 +268,7 @@ export default function Detector({ locale }: { locale: string }) {
                   <button className="fixed inset-0 z-40 cursor-default" aria-label="close" onClick={() => setStatusOpen(false)} />
                   <div className="absolute z-50 mt-2 left-1/2 -translate-x-1/2 w-72 card p-4 text-left fade-in" style={{ background: "var(--surface)" }}>
                     <div className="flex items-baseline justify-between mb-3">
-                      <b className="text-[13px]">{t.hero.officialStatus}</b>
+                      <b className="text-[13px]">{t.hero.officialStatus} · status.anthropic.com</b>
                       <span className="text-[10.5px] text-muted">{t.compUpdated.replace("{t}", new Date(status.fetched_at).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }))}</span>
                     </div>
                     <p className="text-[11.5px] text-muted mb-3 leading-relaxed">{status.description}</p>
@@ -286,7 +286,7 @@ export default function Detector({ locale }: { locale: string }) {
                         );
                       })}
                     </div>
-                    <p className="text-[10px] text-muted mt-3 pt-2 border-t border-line">status.anthropic.com · 5 min cache</p>
+                    <p className="text-[10px] text-muted mt-3 pt-2 border-t border-line">{t.statusSource}</p>
                   </div>
                 </>
               ) : null}

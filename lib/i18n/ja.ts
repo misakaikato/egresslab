@@ -10,7 +10,7 @@ const ja: any = {
     start: "検査開始",
     testing: "検査中…",
     rescan: "再検査",
-    officialStatus: "公式ステータス",
+    officialStatus: "Claude 公式サービス",
     officialUnknown: "不明",
   },
   steps: { intel: "IP 情報", path: "出口経路", reach: "到達性", leakEnv: "リークと環境" },
@@ -303,3 +303,5 @@ ja.account = {
     parse: "解析", org: "組織", kyc: "KYC 状態", device: "デバイス ID( truncated)", gates: "機能ゲート", standing: "ステータス",
   },
 };
+
+ja.statusSource = "出典 status.anthropic.com(Anthropic 公式)· 5 分キャッシュ · 当サイトとは無関係";

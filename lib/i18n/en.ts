@@ -10,7 +10,7 @@ const en: any = {
     start: "Start scan",
     testing: "Scanning…",
     rescan: "Rescan",
-    officialStatus: "Official status",
+    officialStatus: "Claude service",
     officialUnknown: "Unknown",
   },
   steps: { intel: "IP intel", path: "Exit paths", reach: "Reachability", leakEnv: "Leaks & env" },
@@ -303,3 +303,5 @@ en.account = {
     parse: "Parse", org: "Orgs", kyc: "KYC status", device: "Device ID (truncated)", gates: "Feature gates", standing: "Standing",
   },
 };
+
+en.statusSource = "Source: status.anthropic.com (Anthropic official) · 5 min cache · unrelated to this site";

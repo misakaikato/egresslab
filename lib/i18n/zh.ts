@@ -10,7 +10,7 @@ const zh: any = {
     start: "开始检测",
     testing: "检测中…",
     rescan: "重新检测",
-    officialStatus: "官方状态",
+    officialStatus: "Claude 官方服务",
     officialUnknown: "未知",
   },
   steps: { intel: "IP 情报", path: "出口路径", reach: "连通性", leakEnv: "泄漏与环境" },
@@ -308,3 +308,5 @@ zh.account = {
     parse: "解析", org: "组织", kyc: "KYC 状态", device: "设备 ID(截断)", gates: "功能门禁", standing: "账号状态",
   },
 };
+
+zh.statusSource = "数据源 status.anthropic.com(Anthropic 官方状态页)· 5 分钟缓存 · 与本站服务无关";
