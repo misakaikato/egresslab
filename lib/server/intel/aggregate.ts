@@ -3,7 +3,7 @@ import type { IntelResult } from "../../types";
 import { getDb, dbTry } from "../db";
 import { getTorSet, loadFirehol, inFirehol } from "./lists";
 import { lookupLocalGeo, lookupLocalPrivacy } from "./local";
-import { fromIpWho, fromIpApiCom, fromRdap, dnsblScore, fromProxycheck, fromAbuseipdb, ptrCheck, prefixFirstSeen, neighborFlags, whoisCountry, threatfoxHit, sfsCheck, type GeoSource } from "./geo";
+import { fromIpWho, fromIpApiCom, fromRdap, dnsblScore, fromProxycheck, fromAbuseipdb, ptrCheck, prefixFirstSeen, neighborFlags, whoisCountry, threatfoxHit, sfsCheck, peerAsnInfo, classifyNetwork, type GeoSource } from "./geo";
 
 const PRIVATE_V4 = [/^10\./, /^127\./, /^0\./, /^169\.254\./, /^172\.(1[6-9]|2\d|3[01])\./, /^192\.168\./, /^2(2[4-9]|[34]\d)\./];
 export function isPrivateIp(ip: string): boolean {
@@ -84,6 +84,15 @@ export async function aggregateIp(rawIp: string): Promise<IntelResult> {
     asn_type: api?.hosting ? "hosting" : api?.mobile ? "mobile" : "isp",
     isp: who?.isp || api?.isp || rdap?.org || "",
   };
+  // PeeringDB 综合分类:ip-api 旗标对一级转接商(GTT 等)失效,PeeringDB NSP+关键词补判
+  if (network.asn) {
+    const pdb = await peerAsnInfo(network.asn).catch(() => null);
+    if (pdb) {
+      const cls = classifyNetwork({ hosting: !!api?.hosting, mobile: !!api?.mobile, asnName: network.asn_name || "", pdb });
+      network.asn_type = cls.type;
+      network.pdb_type = cls.pdbType || "";
+    }
+  }
 
   const orgBlob = `${network.asn_name} ${network.isp} ${rdap?.org || ""}`.toLowerCase();
   const officialExit = /mullvad/.test(orgBlob) ? "mullvad" : /icloud private relay/.test(orgBlob) ? "icloud_relay" : null;
@@ -92,6 +101,7 @@ export async function aggregateIp(rawIp: string): Promise<IntelResult> {
   if (rdap) sources.push("rdap.org");
   if (torSet) sources.push("tor");
   if (dnsblOk) sources.push("dnsbl");
+  if (network.pdb_type) sources.push("peeringdb");
   if (tf !== null) sources.push("threatfox");
   if (sfs !== null) sources.push("sfs");
 

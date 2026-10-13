@@ -123,7 +123,7 @@ en.path.neighbors = "Neighbor reputation";
 en.path.safety = { title: "Platform preview", ai: "AI signup", media: "Streaming", signup: "Register", safe: "ok", caution: "caution", risk: "risk", note: "Rough preview derived from exit type & reputation — not official data" };
 en.auto.spoof = "Platform spoof mismatch";
 
-en.path.exitsCount = "exits";
+en.path.netClass = "Net class";
 en.path.native = "Native IP";
 en.path.nativeYes = "Native (reg=geo)";
 en.path.nativeNo = "Broadcast/foreign";

@@ -30,6 +30,7 @@ export interface IntelNetwork {
   isp: string;
   ptr?: { host: string; match: boolean | null }; // 正反向 DNS 一致性
   native?: boolean | null; // 原生 IP:注册国=定位国
+  pdb_type?: string; // PeeringDB 分类(NSP/ISP/Content...)
 }
 
 export interface IntelRisk {

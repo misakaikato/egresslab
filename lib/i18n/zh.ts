@@ -126,7 +126,7 @@ zh.path.neighbors = "邻居信誉";
 zh.path.safety = { title: "平台预判", ai: "AI 订阅", media: "流媒体", signup: "注册", safe: "稳", caution: "慎", risk: "险", note: "由出口类型与信誉推导的粗略预判,非官方数据" };
 zh.auto.spoof = "平台伪装矛盾";
 
-zh.path.exitsCount = "个出口";
+zh.path.netClass = "网络分类";
 zh.path.native = "原生性";
 zh.path.nativeYes = "原生(注册国=定位国)";
 zh.path.nativeNo = "广播/异地";

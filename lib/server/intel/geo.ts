@@ -211,3 +211,49 @@ export async function sfsCheck(ip: string): Promise<{ appears: boolean; frequenc
     return null;
   }
 }
+
+// PeeringDB ASN 分类(免费无 key;区分骨干转接与消费级运营商)
+const TRANSIT_RE = /gtt|cogent|lumen|level\s*3|telia|arelion|zayo|hurricane electric|\bhe\.net|pccw|tata communications|seaborn|gblx|savvis|centurylink| Liberty/i;
+const CONSUMER_RE = /telecom|unicom|comcast|verizon|at&t|vodafone|deutsche telekom|orange|british telecom|bell canada|telstra|jio|airtel|charter|spectrum|cox comm|kddi|softbank|chunghwa|pldt|starhub|singtel|sky broadband|virgin media|talktalk/i;
+
+export interface PdbAsn {
+  info_type: string;
+  name: string;
+}
+
+export async function peerAsnInfo(asn: number): Promise<PdbAsn | null> {
+  try {
+    const { getDb, dbTry } = await import("../db");
+    const key = `pdb-asn:${asn}`;
+    const cached = dbTry(() => getDb().prepare("SELECT json FROM intel_cache WHERE key=? AND ts > ?").get(key, Date.now() - 7 * 86400_000) as any, undefined);
+    if (cached?.json) return JSON.parse(cached.json);
+    const j = await jsonFetch(`https://www.peeringdb.com/api/net?asn=${asn}`, 12000);
+    const n = j?.data?.[0];
+    if (!n?.info_type) return null;
+    const out = { info_type: String(n.info_type), name: String(n.name || "") };
+    dbTry(() => {
+      const d = getDb();
+      d.prepare("INSERT INTO intel_cache(key,ts,ttl_ms,json) VALUES(?,?,?,?) ON CONFLICT(key) DO UPDATE SET ts=excluded.ts, json=excluded.json").run(key, Date.now(), 7 * 86400_000, JSON.stringify(out));
+    }, undefined);
+    return out;
+  } catch {
+    return null;
+  }
+}
+
+// 综合网络分类:ip-api 旗标 + PeeringDB + 关键词
+export function classifyNetwork(opts: { hosting?: boolean; mobile?: boolean; asnName: string; pdb: PdbAsn | null }): { type: string; pdbType: string | null } {
+  if (opts.hosting) return { type: "hosting", pdbType: opts.pdb?.info_type || null };
+  if (opts.mobile) return { type: "mobile", pdbType: opts.pdb?.info_type || null };
+  if (opts.pdb) {
+    const nm = `${opts.pdb.name} ${opts.asnName}`.toLowerCase();
+    if (opts.pdb.info_type === "Content") return { type: "cdn", pdbType: opts.pdb.info_type };
+    if (opts.pdb.info_type === "NSP") {
+      if (TRANSIT_RE.test(nm)) return { type: "transit", pdbType: "NSP" };
+      if (CONSUMER_RE.test(nm)) return { type: "isp", pdbType: "NSP" };
+      return { type: "isp", pdbType: `${opts.pdb.info_type}?` };
+    }
+    if (/Cable|MSO|ISP|Enterprise/.test(opts.pdb.info_type)) return { type: opts.pdb.info_type.includes("Enterprise") ? "business" : "isp", pdbType: opts.pdb.info_type };
+  }
+  return { type: "isp", pdbType: opts.pdb?.info_type || null };
+}

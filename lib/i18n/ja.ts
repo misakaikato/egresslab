@@ -123,7 +123,7 @@ ja.path.neighbors = "隣接評判";
 ja.path.safety = { title: "プラットフォーム予測", ai: "AI 登録", media: "ストリーミング", signup: "登録", safe: "可", caution: "注意", risk: "危険", note: "出口タイプと評判からの概算予測・公式データではない" };
 ja.auto.spoof = "プラットフォーム偽装の矛盾";
 
-ja.path.exitsCount = "出口";
+ja.path.netClass = "ネット分類";
 ja.path.native = "ネイティブ性";
 ja.path.nativeYes = "ネイティブ(登録国=位置)";
 ja.path.nativeNo = "ブロードキャスト/外地";

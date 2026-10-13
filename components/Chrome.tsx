@@ -2,7 +2,23 @@
 // 导航组件:语言切换 + 主题切换
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Globe, Moon, Sun } from "lucide-react";
+import { Globe, Moon, Sun, Github, Star } from "lucide-react";
+
+export function GithubLink() {
+  return (
+    <a
+      href="https://github.com/misakaikato/egresslab"
+      target="_blank"
+      rel="noopener"
+      title="GitHub · 如果有用请点个 Star"
+      className="flex items-center gap-1 px-2.5 h-8 rounded-full border border-line text-xs text-soft hover:text-accent hover:border-accent transition-colors"
+    >
+      <Github size={13} />
+      <span>Star</span>
+      <Star size={11} className="text-accent" />
+    </a>
+  );
+}
 
 export function LangSwitch({ locale }: { locale: string }) {
   const router = useRouter();

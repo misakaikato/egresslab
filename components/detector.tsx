@@ -328,7 +328,7 @@ export default function Detector({ locale }: { locale: string }) {
             <button onClick={() => exportReport("md")} className="pill card-hover cursor-pointer">{t.export.md}</button>
             <button onClick={() => exportReport("json")} className="pill card-hover cursor-pointer">{t.export.json}</button>
           </div>
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-4 md:items-start">
             {vCards.map((c) => (
               <VerdictCard key={c.key} title={c.title} subtitle={c.subtitle} tone={c.tone} label={t.expand}>
                 {c.expandKey === "path" ? (
@@ -401,7 +401,7 @@ export default function Detector({ locale }: { locale: string }) {
       ) : null}
 
       {mode === "pro" && conclusions.length ? (
-        <section className="mt-4 fade-in">
+        <section className="fade-in mb-4">
           <InferenceCard conclusions={conclusions} t={t.inference} />
         </section>
       ) : null}

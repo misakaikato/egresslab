@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import "../globals.css";
 import { LOCALES } from "@/lib/i18n/config";
 import { dict } from "@/lib/i18n/config";
-import { LangSwitch, ThemeToggle } from "../../components/Chrome";
+import { LangSwitch, ThemeToggle, GithubLink } from "../../components/Chrome";
 import Logo from "../../components/Logo";
 
 export function generateStaticParams() {
@@ -36,6 +36,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
               <span className="text-xs text-muted hidden sm:inline">{dict(locale).nav.tag}</span>
             </div>
             <div className="flex items-center gap-2">
+              <GithubLink />
               <LangSwitch locale={locale} />
               <ThemeToggle />
             </div>

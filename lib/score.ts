@@ -27,7 +27,7 @@ function dimNetwork(e: ScoreInput): { frac: number; code: string } | { frac: nul
   if (t.vpn || official === "mullvad") return { frac: 0.35, code: "vpn" };
   if (warp === "on" || warp === "plus") return { frac: 0.45, code: "warp" };
   const i = norm(e.ipType);
-  if (t.datacenter || ["idc", "datacenter", "hosting", "cdn", "dns"].some((k) => i.includes(k)))
+  if (t.datacenter || ["idc", "datacenter", "hosting", "cdn", "dns", "transit"].some((k) => i.includes(k)))
     return { frac: 0.5, code: "datacenter" };
   if (official === "icloud_relay") return { frac: 0.7, code: "icloudRelay" };
   if (["business", "education", "government"].some((k) => i.includes(k)))
