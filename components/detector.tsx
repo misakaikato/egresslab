@@ -24,6 +24,7 @@ import ReputationPanel, { RepData } from "./ReputationPanel";
 import ChainCard from "./ChainCard";
 import HistoryCard from "./HistoryCard";
 import InferenceCard from "./InferenceCard";
+import AccountCard from "./AccountCard";
 import { inferConclusions } from "@/lib/inference";
 import FingerprintPanel from "./FingerprintPanel";
 import { buildVerdicts, headline, type Tone } from "@/lib/verdicts";
@@ -368,6 +369,7 @@ export default function Detector({ locale }: { locale: string }) {
             ))}
           </div>
           {conclusions.length ? <InferenceCard conclusions={conclusions} t={t.inference} /> : null}
+          <AccountCard t={t.account} />
           {scans.length ? (
             <HistoryCard scans={scans} t={t.history} />
           ) : null}
@@ -438,6 +440,7 @@ export default function Detector({ locale }: { locale: string }) {
               <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Radar size={14} className="text-accent" />{t.fp.title}</h3>
               <FingerprintPanel fp={fp} t={t.fp} />
             </div>
+            <AccountCard t={t.account} />
             <CliCard t={t.cli} />
             <div className="card p-5">
               <h3 className="text-sm font-semibold mb-2">{t.sources.title}</h3>

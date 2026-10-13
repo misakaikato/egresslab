@@ -281,3 +281,25 @@ ja.inference.coherence = {
   allOk: "TZ/指紋/DNS/出口/コロが相互整合",
   items: { tzGeo: "TZ(国内)と IP 地理の矛盾", spoof: "偽装矛盾 {n} 件", dns: "DNS 応答異常", domainSplit: "ドメイン出口不一致", family: "双栈国不一致", multiExit: "複数出口併存", colo: "入口≠地理" },
 };
+
+ja.account = {
+  title: "アカウント検査(手動同意)",
+  consent: "ここでの操作はすべてあなたの明示的な実行が必要:キーとアカウントデータはこのページのメモリ内のみで処理され、Anthropic へ直接、当サーバー経由なし。保存・記録なし。",
+  key: {
+    title: "A · API Key 検査",
+    run: "検査", valid: "有効", invalidShort: "異常",
+    ok: "Key 有効・組織は {n} モデルにアクセス可",
+    invalid: "Key 無効(認証失敗)",
+    blocked: "拒否(403)——地域ブロックまたは権限不足",
+    ratelimit: "レート制限(429)——高使用または制限中",
+    other: "HTTP {s}——ドキュメント参照",
+    network: "リクエスト失敗(出口が api.anthropic.com に届かない?)",
+    privacy: "制限付き Key を推奨。入力欄はマスク表示、検査後に消去。",
+  },
+  login: {
+    title: "B · ログイン状態取得(claude.ai)",
+    steps: "claude.ai で F12 → Console にスニペットを貼り付け実行 → 出力は自動コピー → ここに貼り付け解析。スニペットは完全透明:org/KYC/状態/デバイス ID のみ読み取り、外部送信なし。",
+    copy: "スニペットをコピー", copied: "コピー済み", pasteHere: "コンソール出力(JSON)をここに貼り付け…",
+    parse: "解析", org: "組織", kyc: "KYC 状態", device: "デバイス ID( truncated)", gates: "機能ゲート", standing: "ステータス",
+  },
+};

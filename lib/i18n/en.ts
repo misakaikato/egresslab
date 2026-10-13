@@ -281,3 +281,25 @@ en.inference.coherence = {
   allOk: "Timezone/fingerprint/DNS/exits/colo corroborate each other",
   items: { tzGeo: "Timezone (CN) vs IP geo conflict", spoof: "{n} spoof contradictions", dns: "DNS answers abnormal", domainSplit: "Domain exits inconsistent", family: "Dual-stack countries differ", multiExit: "Multiple exits coexist", colo: "Entry point ≠ geography" },
 };
+
+en.account = {
+  title: "Account check (manual consent)",
+  consent: "Everything here requires your explicit action: keys and account data stay in this page's memory, go directly to Anthropic, never through this server. Nothing is stored or logged.",
+  key: {
+    title: "A · API Key check",
+    run: "Check", valid: "valid", invalidShort: "error",
+    ok: "Key valid; org can access {n} models",
+    invalid: "Key invalid (authentication failed)",
+    blocked: "Forbidden (403) — region block or insufficient permission",
+    ratelimit: "Rate limited (429) — heavy usage or throttled",
+    other: "HTTP {s} — consult Anthropic docs",
+    network: "Request failed (exit cannot reach api.anthropic.com?)",
+    privacy: "Prefer a restricted key; the field is password-masked and cleared after the check.",
+  },
+  login: {
+    title: "B · Logged-in capture (claude.ai)",
+    steps: "Open claude.ai → F12 → Console → paste and run the snippet → output is copied automatically → paste it back here. The snippet is fully transparent: reads only org/KYC/standing/device ID, sends nothing off-site.",
+    copy: "Copy snippet", copied: "Copied", pasteHere: "Paste console output (JSON) here…",
+    parse: "Parse", org: "Orgs", kyc: "KYC status", device: "Device ID (truncated)", gates: "Feature gates", standing: "Standing",
+  },
+};

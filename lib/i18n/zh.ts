@@ -286,3 +286,25 @@ zh.inference.coherence = {
   allOk: "时区/指纹/DNS/出口/colo 各层相互印证",
   items: { tzGeo: "时区(国内)与 IP 属地矛盾", spoof: "伪装矛盾 {n} 项", dns: "DNS 应答异常", domainSplit: "域名出口不一致", family: "双栈归属国不一致", multiExit: "多出口并存", colo: "接入点与属地不符" },
 };
+
+zh.account = {
+  title: "账号体检(需你手动授权)",
+  consent: "本卡所有操作需你主动输入/执行:密钥与账号数据仅在本页内存处理,直连 Anthropic,不经本站服务器,不存储、不记录。",
+  key: {
+    title: "A · API Key 体检",
+    run: "检测", valid: "有效", invalidShort: "异常",
+    ok: "Key 有效,组织可访问 {n} 个模型",
+    invalid: "Key 无效(未通过认证)",
+    blocked: "请求被拒(403)——可能是地区封锁或权限不足,对照错误码",
+    ratelimit: "触发限流(429)——Key 活跃度高或已被限",
+    other: "HTTP {s},对照 Anthropic 文档",
+    network: "网络请求失败(出口无法到达 api.anthropic.com?)",
+    privacy: "建议使用受限 Key;输入框为密码型,检测完成即清空。",
+  },
+  login: {
+    title: "B · 登录态采集(claude.ai)",
+    steps: "在 claude.ai 任一页面按 F12 → Console 粘贴运行下方脚本 → 输出自动复制 → 回到此处粘贴解析。脚本内容完全透明:只读 org/KYC/账号状态/设备 ID,不发送任何请求到站外。",
+    copy: "复制采集脚本", copied: "已复制", pasteHere: "在此粘贴控制台输出(JSON)…",
+    parse: "解析", org: "组织", kyc: "KYC 状态", device: "设备 ID(截断)", gates: "功能门禁", standing: "账号状态",
+  },
+};
