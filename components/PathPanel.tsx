@@ -29,6 +29,7 @@ export default function PathPanel({
   dns,
   history,
   dnsLeak,
+  safetyFocus,
 }: {
   t: any;
   claude: TraceProbe | undefined;
@@ -40,6 +41,7 @@ export default function PathPanel({
   dns: DnsCheck | null;
   history: HistoryVerdict | null;
   dnsLeak: DnsLeakResult | null;
+  safetyFocus?: string;
 }) {
   const exits = claude?.ip || intel?.ip;
   const distinct = distinctExits(direct.exits);
@@ -117,12 +119,12 @@ export default function PathPanel({
           tone={dnsLeak.mismatch ? "bad" : dnsLeak.resolvers.length ? "good" : "muted"}
         />
       ) : null}
-      <SafetyChips intel={intel} t={t.safety} />
+      <SafetyChips intel={intel} t={t.safety} focus={safetyFocus} />
     </div>
   );
 }
 
-function SafetyChips({ intel, t }: { intel: IntelResult | null; t: any }) {
+function SafetyChips({ intel, t, focus }: { intel: IntelResult | null; t: any; focus?: string }) {
   if (!intel || !intel.risk || !t) return null;
   const r = intel.risk;
   const dc = r.is_datacenter;
@@ -133,14 +135,23 @@ function SafetyChips({ intel, t }: { intel: IntelResult | null; t: any }) {
   const media = r.is_tor ? tier("risk") : dc ? tier("caution") : tier("safe");
   const signup = flagged || bad ? tier("risk") : dc ? tier("caution") : tier("safe");
   const COLOR: Record<string, string> = { safe: "var(--good)", caution: "var(--warn)", risk: "var(--bad)" };
-  const items: [string, string][] = [[t.ai, ai], [t.media, media], [t.signup, signup]];
+  const items: [string, string][] = [["ai", ai], ["media", media], ["signup", signup]];
   return (
     <div className="mt-3 pt-3 border-t border-line">
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-[11px] text-muted">{t.title}:</span>
-        {items.map(([label, v]) => (
-          <span key={label} className="pill border-0" style={{ background: `color-mix(in srgb, ${COLOR[v]} 12%, transparent)`, color: COLOR[v] }}>
-            {label} · {t[v]}
+        {items.map(([key, v]) => (
+          <span
+            key={key}
+            className="pill border-0"
+            style={{
+              background: `color-mix(in srgb, ${COLOR[v]} 12%, transparent)`,
+              color: COLOR[v],
+              outline: focus && focus === key ? `1.5px solid ${COLOR[v]}` : undefined,
+              outlineOffset: "1.5px",
+            }}
+          >
+            {t[key]} · {t[v]}
           </span>
         ))}
       </div>

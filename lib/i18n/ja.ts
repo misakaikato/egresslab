@@ -399,3 +399,7 @@ ja.speed = { title: "Cloudflare スピードテスト", desc: "公式 speed.clou
 ja.headers = { title: "リクエストヘッダ(サーバー視点)", desc: "任意サイトが読めるヘッダ;順序はビルド級指紋。", expand: "展開", collapse: "折りたたみ", loading: "読込中…", order: "順序" };
 
 ja.cardPage = { title: "署名カード", desc: "ホームページ・フォーラム署名・README に埋め込むと、訪問者は自分の IP とスコアを見られます。", refresh: "更新", theme: "テーマ", size: "幅", ipMode: { title: "表示 IP", visitor: "訪問者自身の IP", specified: "指定 IP" }, embed: "埋め込みコード", crawlerNote: "GitHub/Discord/Telegram はサーバー経由で画像を取得するため訪問者 IP 不可——プレースホルダー表示。それらの平台では「指定 IP」を。" };
+
+ja.echoMatrix = { title: "出口マトリクス", desc: "7 サイトのエコーを出口 IP ごとに grouping、3 回サンプルの中央値遅延。", run: "実行", running: "探査中…", sites: "サイト" };
+ja.recaptcha = { title: "reCAPTCHA v3 スコア", desc: "Google 行動スコア(1.0=完全信頼)。クリック時のみ読込。", run: "スコア実行", failed: "評価失敗(token 無効か secret 未設定)", privacy: "クリックで Google への行動データ送信に同意;RECAPTCHA_V3_SITEKEY/SECRET の 2 変数が必要。" };
+ja.platform = { title: "プラットフォーム presets", names: { claude: "Claude", openai: "OpenAI", media: "ストリーミング", tiktok: "TikTok" }, notes: { claude: "地域ゲートと CF 信頼に注目;web と Code は同一档案", openai: "同じく CF 背後;DC 出口と登録 profile に注意", media: "解除は住宅・ネイティブ性次第", tiktok: "DC 許容度最低;登録時に地域固定——IP/TZ/言語の整合を" } };

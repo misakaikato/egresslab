@@ -31,6 +31,8 @@ import AccountCard from "./AccountCard";
 import TurnstileCard from "./TurnstileCard";
 import SpeedCard from "./SpeedCard";
 import HeadersCard from "./HeadersCard";
+import EchoMatrixCard from "./EchoMatrixCard";
+import RecaptchaCard from "./RecaptchaCard";
 import { inferConclusions } from "@/lib/inference";
 import FingerprintPanel from "./FingerprintPanel";
 import { buildVerdicts, headline, type Tone } from "@/lib/verdicts";
@@ -60,6 +62,7 @@ export default function Detector({ locale }: { locale: string }) {
   const [dnsLeak, setDnsLeak] = useState<DnsLeakResult | null>(null);
   const [copiedFmt, setCopiedFmt] = useState<"md" | "json" | null>(null);
   const [cfg, setCfg] = useState<{ turnstile: string | null; recaptcha: string | null } | null>(null);
+  const [platform, setPlatform] = useState<"claude" | "openai" | "media" | "tiktok">("claude");
   const [mode, setMode] = useState<"simple" | "pro">("simple");
   useEffect(() => {
     try { const v = localStorage.getItem("exitlens:view") ?? localStorage.getItem("egresslab:view"); if (v === "pro" || v === "simple") setMode(v); } catch {}
@@ -452,7 +455,7 @@ export default function Detector({ locale }: { locale: string }) {
             {vCards.map((c) => (
               <VerdictCard key={c.key} title={c.title} subtitle={c.subtitle} tone={c.tone} label={t.expand}>
                 {c.expandKey === "path" ? (
-                  <PathPanel t={t.path} claude={claude} direct={direct} v4={dual.v4} v6={dual.v6} intel={intel} browserTz={env?.detail.timezone || ""} dns={dnsCheck} history={history} dnsLeak={dnsLeak} />
+                  <PathPanel t={t.path} claude={claude} direct={direct} v4={dual.v4} v6={dual.v6} intel={intel} browserTz={env?.detail.timezone || ""} dns={dnsCheck} history={history} dnsLeak={dnsLeak} safetyFocus={platform === "claude" || platform === "openai" ? "ai" : platform === "media" ? "media" : "signup"} />
                 ) : c.expandKey === "probes" ? (
                   <ProbeTable probes={probes} t={t.probes} />
                 ) : c.expandKey === "env" ? (
@@ -499,6 +502,19 @@ export default function Detector({ locale }: { locale: string }) {
       {/* 专业视图 */}
       {mode === "pro" ? (
       <>
+      {/* 平台预设 */}
+      {phase !== "idle" ? (
+        <div className="flex flex-wrap items-center gap-2 mb-4 fade-in">
+          <span className="text-[11px] text-muted">{t.platform.title}:</span>
+          {(["claude", "openai", "media", "tiktok"] as const).map((p) => (
+            <button key={p} onClick={() => setPlatform(p)} className={`press pill ${platform === p ? "border-accent text-accent" : ""}`}>
+              {t.platform.names[p]}
+            </button>
+          ))}
+          <span className="text-[11px] text-muted basis-full sm:basis-auto">{t.platform.notes[platform]}</span>
+        </div>
+      ) : null}
+
       {/* 评分区 */}
       {score ? (
         <section className="grid md:grid-cols-[240px_1fr] gap-4 mb-4 fade-in">
@@ -533,7 +549,7 @@ export default function Detector({ locale }: { locale: string }) {
         <section className="grid md:grid-cols-2 gap-4 fade-in">
           <div className="card p-5">
             <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Map size={14} className="text-accent" />{t.path.title}</h3>
-            <PathPanel t={t.path} claude={claude} direct={direct} v4={dual.v4} v6={dual.v6} intel={intel} browserTz={env?.detail.timezone || ""} dns={dnsCheck} history={history} dnsLeak={dnsLeak} />
+            <PathPanel t={t.path} claude={claude} direct={direct} v4={dual.v4} v6={dual.v6} intel={intel} browserTz={env?.detail.timezone || ""} dns={dnsCheck} history={history} dnsLeak={dnsLeak} safetyFocus={platform === "claude" || platform === "openai" ? "ai" : platform === "media" ? "media" : "signup"} />
           </div>
           <div className="card p-5">
             <h3 className="text-sm font-semibold mb-1 flex items-center gap-2"><Activity size={14} className="text-accent" />{t.probes.title}</h3>
