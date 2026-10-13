@@ -201,3 +201,5 @@ en.fp = {
   lies: { title: "Spoofing checks", none: "Factors corroborate each other; no spoofing found",
     keys: { platformFonts: "Platform/font mismatch", emojiPlatform: "Emoji/platform mismatch", webglMismatch: "WebGL1 vs WebGL2 differ", platformClaim: "Platform claims differ", tzSpoof: "Timezone spoofed", langSpoof: "Language spoofed", timingReduced: "Timing reduced (anti-fingerprint)", fontsChannel: "Font channels disagree", clockSkew: "Clock skew abnormal" } },
 };
+
+en.statusLevels = { none: "All systems go", minor: "Minor outage", major: "Major outage", critical: "Critical", maintenance: "Maintenance", unknown: "Unknown" };

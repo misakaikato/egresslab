@@ -204,3 +204,5 @@ zh.fp = {
   lies: { title: "伪装矛盾检测", none: "各因子相互印证,未发现伪装矛盾",
     keys: { platformFonts: "平台与字体矛盾", emojiPlatform: "Emoji 与平台矛盾", webglMismatch: "WebGL 双版本不一致", platformClaim: "平台声明不一致", tzSpoof: "时区被伪装", langSpoof: "语言被伪装", timingReduced: "计时精度被压低(反指纹措施)", fontsChannel: "字体双通道不一致", clockSkew: "时钟偏差异常" } },
 };
+
+zh.statusLevels = { none: "全部正常", minor: "轻微故障", major: "部分中断", critical: "严重故障", maintenance: "维护中", unknown: "未知" };

@@ -239,8 +239,12 @@ export default function Detector({ locale }: { locale: string }) {
             {busy ? t.hero.testing : phase === "done" ? t.hero.rescan : t.hero.start}
           </button>
           {status ? (
-            <span className="pill" title={status.description}>
-              {t.hero.officialStatus}: {status.indicator === "none" ? "OK" : status.indicator}
+            <span
+              className="pill"
+              title={status.description}
+              style={status.indicator !== "none" && status.indicator !== "unknown" ? { borderColor: "var(--warn)", color: "var(--warn)" } : undefined}
+            >
+              {t.hero.officialStatus}: {(t.statusLevels && t.statusLevels[status.indicator]) || status.indicator}
             </span>
           ) : null}
         </div>

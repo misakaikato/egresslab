@@ -201,3 +201,5 @@ ja.fp = {
   lies: { title: "偽装矛盾検出", none: "各因子が相互に整合・偽装の兆候なし",
     keys: { platformFonts: "プラットフォームとフォントの矛盾", emojiPlatform: "Emoji と端末の矛盾", webglMismatch: "WebGL1/2 不一致", platformClaim: "プラットフォーム主張の相違", tzSpoof: "TZ 偽装", langSpoof: "言語偽装", timingReduced: "計時精度低下(抗指紋措置)", fontsChannel: "フォント二重経路の不一致", clockSkew: "時計ずれ異常" } },
 };
+
+ja.statusLevels = { none: "全正常", minor: "軽微な障害", major: "部分的障害", critical: "重大障害", maintenance: "メンテナンス", unknown: "不明" };
