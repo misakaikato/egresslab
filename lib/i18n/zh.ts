@@ -194,9 +194,11 @@ zh.verdicts = {
 
 zh.history = { title: "检测历史", count: "本机共 {n} 次", empty: "完成两次检测后,这里会显示变化趋势", local: "仅存本机浏览器(localStorage),不上传。" };
 zh.fp = {
-  title: "浏览器指纹", hash: "指纹 ID", entropy: "估算熵", bits: "位",
+  title: "浏览器指纹", hash: "指纹 ID", entropy: "估算熵", bits: "位", factors: "因子", more: "更多因子见专业视图",
   unavailableNote: "以下因子不可用(可能被浏览器加固或扩展禁用)",
   local: "全部因子本地计算,哈希不上传。指纹相同意味着跨站可关联——多账号场景应让指纹随环境隔离。",
   pending: "待检测",
-  keys: { canvas: "Canvas 渲染", webgl: "WebGL 渲染器", audio: "音频栈", fonts: "可探测字体", screen: "屏幕", hardware: "硬件参数", timezone: "时区", language: "首选语言", platform: "平台" },
+  keys: { canvas: "Canvas 渲染", webgl: "WebGL 渲染器", webgl2: "WebGL2 扩展", audio: "音频渲染", audioDetail: "音频设备", fonts: "可探测字体", fontWidths: "字体宽度", screen: "屏幕", geometry: "窗口几何", hardware: "硬件参数", timezone: "时区", language: "首选语言", platform: "平台", codecs: "解码器矩阵", voices: "语音列表", uach: "UA-CH 高熵", emoji: "Emoji 渲染", keyboard: "键盘布局", display: "显示器能力", intl: "Intl 行为", webgpu: "WebGPU", storage: "存储配额", mediaDevices: "媒体设备", connection: "网络类型", timing: "计时精度" },
+  lies: { title: "伪装矛盾检测", none: "各因子相互印证,未发现伪装矛盾",
+    keys: { platformFonts: "平台与字体矛盾", emojiPlatform: "Emoji 与平台矛盾", webglMismatch: "WebGL 双版本不一致", platformClaim: "平台声明不一致", tzSpoof: "时区被伪装", langSpoof: "语言被伪装", timingReduced: "计时精度被压低(反指纹措施)" } },
 };

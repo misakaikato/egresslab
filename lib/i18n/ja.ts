@@ -191,9 +191,11 @@ ja.verdicts = {
 
 ja.history = { title: "検査履歴", count: "この端末で {n} 回", empty: "2 回検査すると傾向が表示されます", local: "このブラウザのみに保存(localStorage)。送信されません。" };
 ja.fp = {
-  title: "ブラウザフィンガープリント", hash: "FP ID", entropy: "推定エントロピー", bits: "ビット",
+  title: "ブラウザフィンガープリント", hash: "FP ID", entropy: "推定エントロピー", bits: "ビット", factors: "因子", more: "詳細ビューに残り",
   unavailableNote: "利用不可の因子(ブラウザ強化・拡張機能)",
-  local: "全因子ローカル計算・ハッシュ非送信。同一フィンガープリントは横断的な関連付けを可能にします——マルチアカウントでは環境ごとに分離を。",
+  local: "全因子ローカル計算・ハッシュ非送信。同一 FP は横断的な関連付けを可能にします——マルチアカウントでは環境ごとに分離を。",
   pending: "待機",
-  keys: { canvas: "Canvas 描画", webgl: "WebGL レンダラー", audio: "オーディオスタック", fonts: "検出フォント", screen: "画面", hardware: "ハードウェア", timezone: "タイムゾーン", language: "言語", platform: "プラットフォーム" },
+  keys: { canvas: "Canvas 描画", webgl: "WebGL レンダラー", webgl2: "WebGL2 拡張", audio: "オーディオ描画", audioDetail: "オーディオ機器", fonts: "検出フォント", fontWidths: "フォント幅", screen: "画面", geometry: "ウィンドウ寸法", hardware: "ハードウェア", timezone: "タイムゾーン", language: "言語", platform: "プラットフォーム", codecs: "コーデック行列", voices: "音声リスト", uach: "UA-CH 高エントロピー", emoji: "Emoji 描画", keyboard: "キーボード配列", display: "ディスプレイ能力", intl: "Intl 挙動", webgpu: "WebGPU", storage: "ストレージ割当", mediaDevices: "メディアデバイス", connection: "ネットワーク種別", timing: "タイミング精度" },
+  lies: { title: "偽装矛盾検出", none: "各因子が相互に整合・偽装の兆候なし",
+    keys: { platformFonts: "プラットフォームとフォントの矛盾", emojiPlatform: "Emoji と端末の矛盾", webglMismatch: "WebGL1/2 不一致", platformClaim: "プラットフォーム主張の相違", tzSpoof: "TZ 偽装", langSpoof: "言語偽装", timingReduced: "計時精度低下(抗指紋措置)" } },
 };
