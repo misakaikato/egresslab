@@ -23,6 +23,8 @@ import EnvironmentPanel from "./EnvironmentPanel";
 import ReputationPanel, { RepData } from "./ReputationPanel";
 import ChainCard from "./ChainCard";
 import HistoryCard from "./HistoryCard";
+import InferenceCard from "./InferenceCard";
+import { inferConclusions } from "@/lib/inference";
 import FingerprintPanel from "./FingerprintPanel";
 import { buildVerdicts, headline, type Tone } from "@/lib/verdicts";
 import { HeadlineBand, VerdictCard } from "./VerdictCard";
@@ -166,6 +168,16 @@ export default function Detector({ locale }: { locale: string }) {
     [score, intel, claude, webrtc, env, auto, dnsCheck, history, direct, aiPack, t]
   );
   const head = useMemo(() => (score ? headline(score, t) : null), [score, t]);
+  const conclusions = useMemo(
+    () =>
+      phase === "done"
+        ? inferConclusions(
+            { probes, directExits: direct.exits, dual, webrtc, intel, env, dns: dnsCheck, fp, history, claudeReachable: probes.length ? claude?.status !== "failed" : undefined },
+            t
+          )
+        : [],
+    [phase, probes, direct, dual, webrtc, intel, env, dnsCheck, fp, history, claude, t]
+  );
   const savedAt = useRef(0);
   useEffect(() => {
     if (phase !== "done" || !score || !head || !vCards) return;
@@ -354,6 +366,7 @@ export default function Detector({ locale }: { locale: string }) {
               </VerdictCard>
             ))}
           </div>
+          {conclusions.length ? <InferenceCard conclusions={conclusions} t={t.inference} /> : null}
           {scans.length ? (
             <HistoryCard scans={scans} t={t.history} />
           ) : null}
@@ -383,6 +396,12 @@ export default function Detector({ locale }: { locale: string }) {
             </div>
             {intelFailed ? <p className="text-[11px] text-muted mt-4">{t.err.intelFailed}</p> : null}
           </div>
+        </section>
+      ) : null}
+
+      {mode === "pro" && conclusions.length ? (
+        <section className="mt-4 fade-in">
+          <InferenceCard conclusions={conclusions} t={t.inference} />
         </section>
       ) : null}
 

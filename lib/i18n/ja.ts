@@ -206,3 +206,33 @@ ja.statusLevels = { none: "全正常", minor: "軽微な障害", major: "部分�
 
 ja.compStatus = { operational: "正常稼働", degraded_performance: "性能低下", partial_outage: "部分障害", major_outage: "重大障害", maintenance: "メンテナンス", offline: "オフライン" };
 ja.compUpdated = "更新 {t}";
+
+ja.inference = {
+  title: "深層評估", note: "証拠チェーンから導いた二階結論(ヒューリスティック・直接測定ではない)。信頼度:高=複数の独立兆候。",
+  conf: { high: "高", medium: "中", low: "低" },
+  globalVpn: { title: "グローバル VPN——全トラフィックが同一海外出口", sub: "国内エコーも海外 IP:分流ではなく全トンネル" },
+  splitProxy: { title: "分流プロキシ——海外トラフィックのみ", sub: "国内直結・Claude は海外出口;ルール漏れに注意" },
+  cnDirect: { title: "中国本土直結で Claude に到達", sub: "出口が CN——稀。地域制限に注意" },
+  abroad: { title: "実際に海外所在(高整合)", sub: "TZ と出口一致・国内端点も同一出口" },
+  tzDisguise: { title: "国内所在で TZ を出口に偽装", sub: "国内端点≠出口 だが TZ=出口——意図的偽装" },
+  warp: { title: "Cloudflare WARP 使用中", sub: "WARP トラフィックは直接識別される" },
+  mullvad: { title: "Mullvad VPN 出口", sub: "公式サーバーレンジ" },
+  icloud: { title: "iCloud プライベートリレー", sub: "Apple 中継・地域別出口" },
+  v6LeakCn: { title: "IPv6 が国内に漏洩", sub: "プロキシは IPv4 のみ;IPv6 が実位置を露出" },
+  v6Leak: { title: "IPv6 が別出口", sub: "デュアルスタックの国不一致——関連面が拡大" },
+  sniBlock: { title: "SNI ブロックの疑い(IP は未封鎖)", sub: "ミリ秒失敗=リセット特徴;IP ではなく SNI/経路を" },
+  pool: { title: "新規プロキシプール IP の疑い", sub: "新規プレフィックス+隣接ブラックリスト" },
+  antidetect: { title: "抗指紋ブラウザ環境", sub: "複数の偽装矛盾+プロキシ出口(風控側も導出可能)" },
+  hardened: { title: "プライバシー強化ブラウザ", sub: "計時/canvas/フォント制限——Brave・RFP・拡張" },
+  rotation: { title: "出口の高頻度入れ替え", sub: "7 日で複数回国切替——プール輪替か一時的ネットワーク" },
+  ideal: { title: "ネイティブ住宅環境——ほぼ最適", sub: "住宅+ネイティブ+旧プレフィックス+クリーン+矛盾なし" },
+  ev: {
+    tz: "TZ", ipTz: "IP TZ", cnEcho: "国内エコー", claudeExit: "Claude 出口", colo: "コロ",
+    globalVpnNote: "全エコー源が同一 IP", splitNote: "国内と海外エンド点が異なる",
+    orgMatch: "組織が {v} に一致", v6Note: "デュアルスタック国不一致", fastFail: "{ms}ms で失敗(リセット特徴)",
+    dnsOk: "DNS 正常", checkOfficial: "公式ステータス正常", prefix: "プレフィックス初見", neighbors: "隣接 BL",
+    dcFlag: "DC フラグ", lies: "偽装矛盾 {n} 件", timing: "計時精度低下", blocked: "ブロック因子",
+    sw7: "7 日で {n} 回国切替", trail: "軌跡", residential: "住宅 ASN", native: "登録国=位置(ネイティブ)",
+    clean: "濫用/BL クリーン", noLies: "偽装矛盾なし",
+  },
+};

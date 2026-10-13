@@ -206,3 +206,33 @@ en.statusLevels = { none: "All systems go", minor: "Minor outage", major: "Major
 
 en.compStatus = { operational: "Operational", degraded_performance: "Degraded", partial_outage: "Partial outage", major_outage: "Major outage", maintenance: "Maintenance", offline: "Offline" };
 en.compUpdated = "Updated {t}";
+
+en.inference = {
+  title: "Deep assessment", note: "Second-order conclusions derived from evidence chains (heuristic, not direct measurement). Confidence: high = multiple independent signals.",
+  conf: { high: "high", medium: "med", low: "low" },
+  globalVpn: { title: "Global VPN — all traffic via one overseas exit", sub: "CN echo endpoints also return the overseas IP: full-tunnel, not split" },
+  splitProxy: { title: "Split proxy — only foreign traffic proxied", sub: "CN direct, Claude via overseas exit; rule mode may leak domains" },
+  cnDirect: { title: "Mainland-CN direct exit reaching Claude", sub: "Claude exit is in CN — rare; mind regional restrictions" },
+  abroad: { title: "Physically abroad (or highly consistent)", sub: "Timezone matches exit; CN endpoints share the same exit" },
+  tzDisguise: { title: "In CN with timezone faked to match exit", sub: "CN endpoints differ from exit, but timezone matches exit — deliberate disguise" },
+  warp: { title: "Cloudflare WARP in use", sub: "Anthropic can identify WARP traffic directly" },
+  mullvad: { title: "Mullvad VPN exit", sub: "Official Mullvad server range" },
+  icloud: { title: "iCloud Private Relay", sub: "Apple relay, region-based exits" },
+  v6LeakCn: { title: "IPv6 leaking to mainland CN", sub: "Proxy covers IPv4 only; IPv6 exposes real location" },
+  v6Leak: { title: "IPv6 uses a different exit", sub: "Dual-stack countries differ — wider correlation surface" },
+  sniBlock: { title: "Likely SNI blocking (IP not banned)", sub: "Millisecond failure = reset signature; change SNI/path, not IP" },
+  pool: { title: "Likely fresh proxy-pool IP", sub: "Recently announced prefix + flagged neighbors — pool just provisioned" },
+  antidetect: { title: "Anti-detect browser environment", sub: "Multiple spoof contradictions + proxy exit (risk engines can derive this too)" },
+  hardened: { title: "Privacy-hardened browser", sub: "Timing/canvas/fonts restricted — Brave, RFP or extensions" },
+  rotation: { title: "High-frequency exit rotation", sub: "Multiple country switches in 7 days — pool rotation or ephemeral network" },
+  ideal: { title: "Native residential setup — near optimal", sub: "Residential + native + old prefix + clean + no contradictions" },
+  ev: {
+    tz: "Timezone", ipTz: "IP timezone", cnEcho: "CN echo", claudeExit: "Claude exit", colo: "Colo",
+    globalVpnNote: "All echo sources return the same IP", splitNote: "CN and global endpoints differ",
+    orgMatch: "Org matches {v}", v6Note: "Dual-stack countries differ", fastFail: "failed in {ms}ms (reset signature)",
+    dnsOk: "DNS resolves normally", checkOfficial: "Official status OK", prefix: "Prefix first seen", neighbors: "Neighbors flagged",
+    dcFlag: "Flagged as datacenter", lies: "{n} spoof contradictions", timing: "Timing precision reduced", blocked: "Blocked factors",
+    sw7: "{n} country switches in 7d", trail: "Trail", residential: "Residential/mobile ASN", native: "Registered=geo (native)",
+    clean: "Abuse/blacklist clean", noLies: "No spoof contradictions",
+  },
+};

@@ -209,3 +209,33 @@ zh.statusLevels = { none: "全部正常", minor: "轻微故障", major: "部分�
 
 zh.compStatus = { operational: "正常运行", degraded_performance: "性能降级", partial_outage: "部分中断", major_outage: "严重中断", maintenance: "维护中", offline: "离线" };
 zh.compUpdated = "更新于 {t}";
+
+zh.inference = {
+  title: "深度研判", note: "以下为证据链推导的二阶结论(启发式,非直接测量),置信度:高=多证据独立指向。",
+  conf: { high: "高", medium: "中", low: "低" },
+  globalVpn: { title: "全局 VPN,所有流量走同一海外出口", sub: "国内回显端点也返回海外 IP——不是分流,是整机代理" },
+  splitProxy: { title: "分流代理,仅境外流量走代理", sub: "国内直连、Claude 走海外出口;若为规则模式,注意漏网域名" },
+  cnDirect: { title: "国内直连出口访问 Claude", sub: "Claude 出口在中国大陆——罕见,注意官方地区限制" },
+  abroad: { title: "人确实在境外(或环境高度一致)", sub: "时区与出口一致,国内端点也走同一出口" },
+  tzDisguise: { title: "人在国内,时区伪装成出口地", sub: "国内端点与出口不同,但时区与出口一致——主动伪装" },
+  warp: { title: "正在使用 Cloudflare WARP", sub: "Anthropic 侧可直接识别 WARP 流量" },
+  mullvad: { title: "Mullvad VPN 出口", sub: "官方公布的 Mullvad 服务器段" },
+  icloud: { title: "iCloud 专用代理", sub: "苹果官方中继,按大致地区分配出口" },
+  v6LeakCn: { title: "IPv6 裸奔回国内", sub: "代理只接管 IPv4,IPv6 直连暴露真实所在地" },
+  v6Leak: { title: "IPv6 走了另一个出口", sub: "双栈出口国家不一致,增加关联面" },
+  sniBlock: { title: "疑似 SNI 阻断(IP 未被封)", sub: "毫秒级失败是连接重置特征;换 SNI 或换链路而非换 IP" },
+  pool: { title: "疑似代理池新启用 IP", sub: "前缀新宣告+段内邻居被标记——池方刚上架" },
+  antidetect: { title: "反检测浏览器环境", sub: "多项伪装矛盾+代理出口——抗指纹工具在运行(该结论本身也会被 Claude 类风控推出)" },
+  hardened: { title: "浏览器隐私加固", sub: "计时精度/canvas/字体通道被限制——Brave、RFP 或扩展" },
+  rotation: { title: "出口高频轮换", sub: "7 天内多次换国——代理池自动轮换或临时网络" },
+  ideal: { title: "家宽原生环境,当前接近最优", sub: "家宽+原生+老前缀+记录清白+无伪装矛盾" },
+  ev: {
+    tz: "时区", ipTz: "IP 时区", cnEcho: "国内端点回显", claudeExit: "Claude 出口", colo: "接入节点",
+    globalVpnNote: "全部回显源返回同一 IP", splitNote: "国内外端点返回不同 IP",
+    orgMatch: "出口组织匹配 {v}", v6Note: "双栈归属国不一致", fastFail: "{ms}ms 内失败(重置特征)",
+    dnsOk: "DNS 解析正常", checkOfficial: "官方状态页正常", prefix: "前缀首见", neighbors: "邻居被标记",
+    dcFlag: "情报标记为机房", lies: "伪装矛盾 {n} 项", timing: "计时精度被压低", blocked: "被屏蔽因子",
+    sw7: "7 天内换国 {n} 次", trail: "国家轨迹", residential: "家宽/移动 ASN", native: "注册国=定位国(原生)",
+    clean: "滥用/黑名单记录清白", noLies: "无伪装矛盾",
+  },
+};
