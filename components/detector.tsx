@@ -1,12 +1,14 @@
 "use client";
 // 检测编排器:点击开始 → 并行探测 → 聚合 → 评分 → 渲染
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { dict } from "@/lib/i18n/config";
 import { computeScore } from "@/lib/score";
 import type { IntelResult, ScoreInput, TraceProbe, WebRtcResult } from "@/lib/types";
 import { probeTrace, ANTHROPIC_HOSTS } from "@/lib/detect/trace";
 import { probeDirect, distinctExits, recordExit, type HistoryVerdict, type EchoResult } from "@/lib/detect/direct";
 import { probeAiPack } from "@/lib/detect/aipack";
+import { collectFingerprint, type FingerprintResult } from "@/lib/detect/fingerprint";
+import { loadScans, saveScan, type ScanRecord } from "@/lib/detect/scanHistory";
 import { probeDualStack, StackInfo } from "@/lib/detect/dualstack";
 import { detectWebRtc } from "@/lib/detect/webrtc";
 import { scanEnvironment, EnvScanResult } from "@/lib/detect/environment";
@@ -20,6 +22,8 @@ import PathPanel from "./PathPanel";
 import EnvironmentPanel from "./EnvironmentPanel";
 import ReputationPanel, { RepData } from "./ReputationPanel";
 import ChainCard from "./ChainCard";
+import HistoryCard from "./HistoryCard";
+import FingerprintPanel from "./FingerprintPanel";
 import { buildVerdicts, headline, type Tone } from "@/lib/verdicts";
 import { HeadlineBand, VerdictCard } from "./VerdictCard";
 import { Play, RotateCw, TerminalSquare, Copy, Check, Activity, Map, Radar, Fingerprint, Server } from "lucide-react";
@@ -35,6 +39,8 @@ export default function Detector({ locale }: { locale: string }) {
   const [direct, setDirect] = useState<{ ip: string; via: string; exits: EchoResult[] }>({ ip: "", via: "", exits: [] });
   const [history, setHistory] = useState<HistoryVerdict | null>(null);
   const [aiPack, setAiPack] = useState<TraceProbe[] | null>(null);
+  const [fp, setFp] = useState<FingerprintResult | null>(null);
+  const [scans, setScans] = useState<ScanRecord[]>([]);
   const [dual, setDual] = useState<{ v4: StackInfo | null; v6: StackInfo | null }>({ v4: null, v6: null });
   const [intel, setIntel] = useState<IntelResult | null>(null);
   const [intelFailed, setIntelFailed] = useState(false);
@@ -52,6 +58,10 @@ export default function Detector({ locale }: { locale: string }) {
 
   useEffect(() => {
     fetch("/api/claude/status").then((r) => r.json()).then((j) => j?.ok && setStatus({ indicator: j.indicator, description: j.description })).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    setScans(loadScans());
   }, []);
 
   const run = useCallback(async () => {
@@ -97,6 +107,7 @@ export default function Detector({ locale }: { locale: string }) {
     setDns(dnsR);
     setAiPack(aiR);
     setAuto(collectAutomation());
+    setFp(await collectFingerprint().catch(() => null));
     const exitCountry = traceList[0]?.country || intelR?.geo?.country_code || "";
     const exitIpForHist = claudeIp || directR.ip;
     if (exitIpForHist) setHistory(recordExit(exitIpForHist, String(exitCountry || "").toUpperCase()));
@@ -154,6 +165,24 @@ export default function Detector({ locale }: { locale: string }) {
     [score, intel, claude, webrtc, env, auto, dnsCheck, history, direct, aiPack, t]
   );
   const head = useMemo(() => (score ? headline(score, t) : null), [score, t]);
+  const savedAt = useRef(0);
+  useEffect(() => {
+    if (phase !== "done" || !score || !head || !vCards) return;
+    if (Date.now() - savedAt.current < 3000) return;
+    savedAt.current = Date.now();
+    const rec: ScanRecord = {
+      ts: Date.now(),
+      score: score.score,
+      level: score.level,
+      gate: score.gate,
+      region: score.region,
+      exitIp: claude?.ip || direct.ip,
+      headline: head.text,
+      verdicts: vCards.map((c) => c.title),
+      cnScore: env?.score,
+    };
+    setScans(saveScan(rec));
+  }, [phase, score, head, vCards]);
 
   const exportReport = (fmt: "md" | "json") => {
     if (!score) return;
@@ -261,6 +290,10 @@ export default function Detector({ locale }: { locale: string }) {
                 ) : c.expandKey === "env" ? (
                   <>
                     <EnvironmentPanel env={env} t={t.env} />
+                    <div className="mt-4 pt-3 border-t border-line">
+                      <h4 className="text-[12.5px] font-semibold mb-2">{t.fp.title}</h4>
+                      <FingerprintPanel fp={fp} t={t.fp} compact />
+                    </div>
                     {auto ? (
                       <div className="mt-3 pt-3 border-t border-line flex flex-wrap gap-x-5 gap-y-1 text-[12.5px]">
                         <span className="text-muted">{t.auto.webdriver}: <b style={{ color: auto.webdriver ? "var(--bad)" : "var(--good)" }}>{auto.webdriver ? t.auto.on : t.auto.off}</b></span>
@@ -286,6 +319,9 @@ export default function Detector({ locale }: { locale: string }) {
               </VerdictCard>
             ))}
           </div>
+          {scans.length ? (
+            <HistoryCard scans={scans} t={t.history} />
+          ) : null}
         </div>
       ) : null}
 
@@ -343,12 +379,22 @@ export default function Detector({ locale }: { locale: string }) {
               <h3 className="text-sm font-semibold mb-3 flex items-center gap-2"><Server size={14} className="text-accent" />{t.rep.title}</h3>
               <ReputationPanel data={rep} ip={exitIp} t={t.rep} />
             </div>
+            <div className="card p-5">
+              <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Radar size={14} className="text-accent" />{t.fp.title}</h3>
+              <FingerprintPanel fp={fp} t={t.fp} />
+            </div>
             <CliCard t={t.cli} />
             <div className="card p-5">
               <h3 className="text-sm font-semibold mb-2">{t.sources.title}</h3>
               <p className="text-[11.5px] text-muted leading-relaxed">{t.sources.geo}<br />{t.sources.risk}<br />{t.sources.cache}</p>
             </div>
           </div>
+        </section>
+      ) : null}
+
+      {mode === "pro" && phase === "done" && scans.length ? (
+        <section className="mt-4 fade-in">
+          <HistoryCard scans={scans} t={t.history} />
         </section>
       ) : null}
 

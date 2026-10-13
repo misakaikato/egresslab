@@ -188,3 +188,12 @@ en.verdicts = {
     partial: "Insufficient history", partialSub: "Few checks so far — records build up with use",
   },
 };
+
+en.history = { title: "Scan history", count: "{n} on this device", empty: "Complete two scans to see the trend", local: "Stored only in this browser (localStorage). Never uploaded." };
+en.fp = {
+  title: "Browser fingerprint", hash: "Fingerprint ID", entropy: "Est. entropy", bits: "bits",
+  unavailableNote: "Unavailable factors (browser hardening or extensions)",
+  local: "All factors computed locally; the hash is never uploaded. Identical fingerprints enable cross-site linking — isolate fingerprints per environment for multi-account use.",
+  pending: "Pending",
+  keys: { canvas: "Canvas render", webgl: "WebGL renderer", audio: "Audio stack", fonts: "Detectable fonts", screen: "Screen", hardware: "Hardware", timezone: "Timezone", language: "Language", platform: "Platform" },
+};

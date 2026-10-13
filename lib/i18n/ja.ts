@@ -188,3 +188,12 @@ ja.verdicts = {
     partial: "履歴データ不足", partialSub: "照会回数が少ない・利用で蓄積される",
   },
 };
+
+ja.history = { title: "検査履歴", count: "この端末で {n} 回", empty: "2 回検査すると傾向が表示されます", local: "このブラウザのみに保存(localStorage)。送信されません。" };
+ja.fp = {
+  title: "ブラウザフィンガープリント", hash: "FP ID", entropy: "推定エントロピー", bits: "ビット",
+  unavailableNote: "利用不可の因子(ブラウザ強化・拡張機能)",
+  local: "全因子ローカル計算・ハッシュ非送信。同一フィンガープリントは横断的な関連付けを可能にします——マルチアカウントでは環境ごとに分離を。",
+  pending: "待機",
+  keys: { canvas: "Canvas 描画", webgl: "WebGL レンダラー", audio: "オーディオスタック", fonts: "検出フォント", screen: "画面", hardware: "ハードウェア", timezone: "タイムゾーン", language: "言語", platform: "プラットフォーム" },
+};
