@@ -2,6 +2,7 @@
 // 浏览器指纹面板:因子表 + 哈希 + 熵 + 伪装矛盾检测(全本地)
 import { Fingerprint, ShieldAlert, ShieldCheck } from "lucide-react";
 import type { FingerprintResult } from "@/lib/detect/fingerprint";
+import { CLAUDE_COLLECTS } from "@/lib/detect/fingerprint";
 
 const LIE_TONE: Record<string, string> = { timingReduced: "var(--warn)" };
 
@@ -22,6 +23,9 @@ export default function FingerprintPanel({ fp, t, compact = false }: { fp: Finge
         <span className="text-[12px] text-muted">
           {t.factors}: <b className="text-ink">{fp.components.length}</b>
         </span>
+        <span className="pill border-0 px-1.5" style={{ background: "var(--accent-soft)", color: "var(--accent)" }} title={t.claudeNote}>
+          {t.claudeMark} {fp.components.filter((c) => CLAUDE_COLLECTS.has(c.key)).length}
+        </span>
       </div>
       <div className={compact ? "grid grid-cols-1 gap-y-1" : "grid sm:grid-cols-2 gap-x-6 gap-y-1"}>
         {items.map((c) => (
@@ -29,6 +33,7 @@ export default function FingerprintPanel({ fp, t, compact = false }: { fp: Finge
             <span className="text-muted shrink-0">
               {t.keys[c.key] ?? c.key}
               <span className="text-[10px]"> +{c.bits}b</span>
+              {CLAUDE_COLLECTS.has(c.key) ? <span className="ml-1 text-[9px] px-1 rounded" style={{ background: "var(--accent-soft)", color: "var(--accent)" }} title={t.claudeNote}>C</span> : null}
             </span>
             <span className="mono text-[11px] text-right truncate max-w-[62%]" title={c.value}>
               {c.value}

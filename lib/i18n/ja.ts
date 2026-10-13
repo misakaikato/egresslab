@@ -73,9 +73,10 @@ ja.cli = {
     { label: "出口 IP / 地域 / WARP", note: "Anthropic が実際に見る出口", cmd: "curl -s https://api.anthropic.com/cdn-cgi/trace | grep -E '^(ip|loc|warp|colo)='" },
     { label: "デュアルスタック分流", note: "v4/v6 出口の不一致はリーク", cmd: "curl -4 -s https://api.anthropic.com/cdn-cgi/trace | grep '^ip=' && curl -6 -s https://api.anthropic.com/cdn-cgi/trace | grep '^ip='" },
     { label: "システムタイムゾーン", note: "Claude Code が読み取る項目;TZ 変数で上書き可", cmd: "date +%Z%z; readlink /etc/localtime; env | grep '^TZ='" },
-    { label: "環境変数の漏洩面", note: "中継エンドポイント / プロキシ / TZ / 言語", cmd: "env | grep -iE 'anthropic|proxy|^TZ=|lang|lc_'" },
+    { label: "環境変数の漏洩面", note: "中継/プロキシ/TZ/言語;テレメトリ env ブロックは arch/shell/terminal も送信", cmd: "env | grep -iE 'anthropic|proxy|^TZ=|lang|lc_'; uname -m; echo $SHELL / $TERM_PROGRAM" },
     { label: "DNS と hosts 乗っ取り", note: "分流設定の隠れ場所", cmd: "grep -iE 'claude|anthropic' /etc/hosts; dig +short claude.ai; dig @1.1.1.1 +short claude.ai" },
     { label: "ローカルプロキシ", note: "CLI はシステムプロキシを無視し env 変数のみ従うことが多い", cmd: "scutil --proxy; lsof -iTCP -sTCP:LISTEN -P -n 2>/dev/null | grep -iE 'clash|v2ray|sing|xray|ss-|surge' || true" },
+    { label: "Claude Code 端末露出面", note: "~/.claude の保存(コマンド履歴/スナップショット/ transcript)はテレメトリ設定の影響を受けない;ID は先頭 8 文字のみ", cmd: "jq '{userID: .userID[0:8], numStartups, oauth: (.oauthAccount != null)}' ~/.claude.json 2>/dev/null; ls ~/.claude/bash-commands.log ~/.claude/shell-snapshots 2>/dev/null; echo DISABLE_TELEMETRY=$DISABLE_TELEMETRY" },
   ],
   copy: "コピー", copied: "コピー済み",
 };
@@ -91,6 +92,7 @@ ja.chain = {
     { src: "OSS", name: "ログイン/セッション", ep: "auth/mfa · session_reattest · trusted_devices", check: "SMS 因子、WebAuthn 再認証、信頼デバイス", dim: "TZ/言語矛盾(ブラウザ次元)" },
     { src: "実測", name: "KYC", ep: "organizations/{org}/kyc_status", check: "Persona KYC 状態機械(not_required→created→verified/denied)", dim: "出口一致性 + デバイス指紋" },
     { src: "静的", name: "決済", ep: "billing/gift/purchase_eligibility · overage/checkout", check: "購入資格、ギフトカード経路、アップグレード step-up", dim: "IP 評判 + 請求地域(評判次元)" },
+    { src: "実測", name: "行動テレメトリ", ep: "event_logging/v2 · rum", check: "入力遅延・貼付長バケット・api_repeated_paths(重複=スクリプト特徴)・daily-visible-ms", dim: "本ページでは測定不可——UI を使い API 直叩きを避け通常の利用を" },
     { src: "実測", name: "ランタイム", ep: "account/standing · banners · challenge_redirect", check: "BAN/制限状態、リスクバナー、CAPTCHA リダイレクト", dim: "自動化/Cookie(自動化次元)" },
   ],
   errorsTitle: "エラーコード逆引き",
@@ -191,7 +193,7 @@ ja.verdicts = {
 
 ja.history = { title: "検査履歴", count: "この端末で {n} 回", empty: "2 回検査すると傾向が表示されます", local: "このブラウザのみに保存(localStorage)。送信されません。" };
 ja.fp = {
-  title: "ブラウザフィンガープリント", hash: "FP ID", entropy: "推定エントロピー", bits: "ビット", factors: "因子", more: "詳細ビューに残り",
+  title: "ブラウザフィンガープリント", hash: "FP ID", entropy: "推定エントロピー", bits: "ビット", factors: "因子", more: "詳細ビューに残り", claudeMark: "Claude 収集面", claudeNote: "claude.ai フロントエンドビーコンの公開観測に基づく:C マークの因子はその収集範囲",
   unavailableNote: "利用不可の因子(ブラウザ強化・拡張機能)",
   local: "全因子ローカル計算・ハッシュ非送信。同一 FP は横断的な関連付けを可能にします——マルチアカウントでは環境ごとに分離を。",
   pending: "待機",

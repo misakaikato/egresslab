@@ -453,6 +453,14 @@ export async function collectFingerprint(): Promise<FingerprintResult> {
   const quotaNum = Number(storage.fp);
   if (Number.isFinite(quotaNum) && quotaNum > 0) components.push({ key: "incognito", value: quotaNum < 300_000_000 ? "reduced" : "normal", bits: 1 });
   push("privacySet", `${(navigator as any).doNotTrack || "-"}/${(navigator as any).globalPrivacyControl ?? "-"}`, 1);
+  // 信标同款补充因子
+  push("charset", document.characterSet || "unavailable", 1);
+  let caps = "unavailable";
+  try {
+    caps = `${(window as any).localStorage ? 1 : 0}${(window as any).sessionStorage ? 1 : 0}${(window as any).indexedDB ? 1 : 0}${navigator.cookieEnabled ? 1 : 0}`;
+  } catch {}
+  push("storageCaps", caps, 1);
+  push("plugins", String(navigator.plugins?.length ?? -1), 1);
 
   const input = components.map((c) => `${c.key}=${c.value}`).join("|");
   const hash = (await sha256Hex(input)).slice(0, 32);
@@ -732,3 +740,10 @@ async function serverView(): Promise<{ skewMs: number | null; headerOrder: strin
     return { skewMs: null, headerOrder: "", hints: "" };
   }
 }
+
+// claude.ai 前端 s-cdn 信标的公开观测采集面:命中即标记"Claude 也采集"
+export const CLAUDE_COLLECTS: Set<string> = new Set([
+  "canvas", "webgl", "fonts", "fontWidths", "screen", "hardware", "timezone",
+  "language", "platform", "audio", "codecs", "uach", "emoji", "display",
+  "incognito", "charset", "storageCaps", "plugins",
+]);

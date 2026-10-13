@@ -73,9 +73,10 @@ en.cli = {
     { label: "Exit IP / region / WARP", note: "What Anthropic actually sees", cmd: "curl -s https://api.anthropic.com/cdn-cgi/trace | grep -E '^(ip|loc|warp|colo)='" },
     { label: "Dual-stack split", note: "v4/v6 exit mismatch means a leak", cmd: "curl -4 -s https://api.anthropic.com/cdn-cgi/trace | grep '^ip=' && curl -6 -s https://api.anthropic.com/cdn-cgi/trace | grep '^ip='" },
     { label: "System timezone", note: "The one Claude Code reads; TZ env overrides it", cmd: "date +%Z%z; readlink /etc/localtime; env | grep '^TZ='" },
-    { label: "Env var exposure", note: "Relay endpoint / proxy / timezone / language", cmd: "env | grep -iE 'anthropic|proxy|^TZ=|lang|lc_'" },
+    { label: "Env var exposure", note: "Relay/proxy/TZ/language; the telemetry env block also reports arch/shell/terminal", cmd: "env | grep -iE 'anthropic|proxy|^TZ=|lang|lc_'; uname -m; echo $SHELL / $TERM_PROGRAM" },
     { label: "DNS & hosts hijack", note: "Where split-routing configs hide", cmd: "grep -iE 'claude|anthropic' /etc/hosts; dig +short claude.ai; dig @1.1.1.1 +short claude.ai" },
     { label: "Local proxy processes", note: "CLIs often ignore system proxy and honor env vars only", cmd: "scutil --proxy; lsof -iTCP -sTCP:LISTEN -P -n 2>/dev/null | grep -iE 'clash|v2ray|sing|xray|ss-|surge' || true" },
+    { label: "Claude Code local footprint", note: "~/.claude persists (command log/snapshots/transcripts) regardless of telemetry switches; ID truncated to 8 chars", cmd: "jq '{userID: .userID[0:8], numStartups, oauth: (.oauthAccount != null)}' ~/.claude.json 2>/dev/null; ls ~/.claude/bash-commands.log ~/.claude/shell-snapshots 2>/dev/null; echo DISABLE_TELEMETRY=$DISABLE_TELEMETRY" },
   ],
   copy: "Copy", copied: "Copied",
 };
@@ -91,6 +92,7 @@ en.chain = {
     { src: "OSS", name: "Login/session", ep: "auth/mfa · session_reattest · trusted_devices", check: "SMS factor, WebAuthn re-attestation, trusted devices", dim: "TZ/language mismatch (Browser dim)" },
     { src: "observed", name: "KYC", ep: "organizations/{org}/kyc_status", check: "Persona KYC state machine (not_required→created→verified/denied)", dim: "Exit consistency + device fingerprint" },
     { src: "static", name: "Billing", ep: "billing/gift/purchase_eligibility · overage/checkout", check: "Purchase eligibility, gift route, upgrade step-up", dim: "IP reputation + billing region (Reputation dim)" },
+    { src: "observed", name: "Behavior telemetry", ep: "event_logging/v2 · rum", check: "Typing latency, paste-length buckets, api_repeated_paths (repeats = script signature), daily-visible-ms", dim: "Not testable here — use the UI, avoid raw API calls, keep a normal usage pattern" },
     { src: "observed", name: "Runtime", ep: "account/standing · banners · challenge_redirect", check: "Ban/restriction status, risk banners, CAPTCHA redirects", dim: "Automation/cookies (Automation dim)" },
   ],
   errorsTitle: "Error code lookup",
@@ -191,7 +193,7 @@ en.verdicts = {
 
 en.history = { title: "Scan history", count: "{n} on this device", empty: "Complete two scans to see the trend", local: "Stored only in this browser (localStorage). Never uploaded." };
 en.fp = {
-  title: "Browser fingerprint", hash: "Fingerprint ID", entropy: "Est. entropy", bits: "bits", factors: "factors", more: "more in expert view",
+  title: "Browser fingerprint", hash: "Fingerprint ID", entropy: "Est. entropy", bits: "bits", factors: "factors", more: "more in expert view", claudeMark: "Claude collects", claudeNote: "Per community observation of the claude.ai frontend beacon, factors marked C are within its collection surface",
   unavailableNote: "Unavailable factors (browser hardening or extensions)",
   local: "All factors computed locally; the hash is never uploaded. Identical fingerprints enable cross-site linking — isolate fingerprints per environment.",
   pending: "Pending",

@@ -74,9 +74,10 @@ zh.cli = {
     { label: "出口 IP / 地区 / WARP", note: "Anthropic 亲自看到的出口", cmd: "curl -s https://api.anthropic.com/cdn-cgi/trace | grep -E '^(ip|loc|warp|colo)='" },
     { label: "双栈分流", note: "v4 与 v6 出口不一致即泄漏", cmd: "curl -4 -s https://api.anthropic.com/cdn-cgi/trace | grep '^ip=' && curl -6 -s https://api.anthropic.com/cdn-cgi/trace | grep '^ip='" },
     { label: "系统时区", note: "Claude Code 会读取的那项;TZ 环境变量可覆盖", cmd: "date +%Z%z; readlink /etc/localtime; env | grep '^TZ='" },
-    { label: "环境变量泄密面", note: "中转端点 / 代理 / 时区 / 语言", cmd: "env | grep -iE 'anthropic|proxy|^TZ=|lang|lc_'" },
+    { label: "环境变量泄密面", note: "中转端点 / 代理 / 时区 / 语言;遥测 env 块还回传 arch/shell/terminal", cmd: "env | grep -iE 'anthropic|proxy|^TZ=|lang|lc_'; uname -m; echo $SHELL / $TERM_PROGRAM" },
     { label: "DNS 与 hosts 劫持", note: "分流配置的藏身处", cmd: "grep -iE 'claude|anthropic' /etc/hosts; dig +short claude.ai; dig @1.1.1.1 +short claude.ai" },
     { label: "本机代理进程", note: "终端程序不一定吃系统代理,常只认环境变量", cmd: "scutil --proxy; lsof -iTCP -sTCP:LISTEN -P -n 2>/dev/null | grep -iE 'clash|v2ray|sing|xray|ss-|surge' || true" },
+    { label: "Claude Code 本机暴露面", note: "~/.claude 落盘(命令日志/快照/转录)不受遥测开关影响;仅截取前 8 位", cmd: "jq '{userID: .userID[0:8], numStartups, oauth: (.oauthAccount != null)}' ~/.claude.json 2>/dev/null; ls ~/.claude/bash-commands.log ~/.claude/shell-snapshots 2>/dev/null; echo DISABLE_TELEMETRY=$DISABLE_TELEMETRY" },
   ],
   copy: "复制", copied: "已复制",
 };
@@ -94,6 +95,7 @@ zh.chain = {
     { src: "开源", name: "登录/会话", ep: "auth/mfa · session_reattest · trusted_devices", check: "短信因子、WebAuthn 重认证、信任设备", dim: "时区/语言矛盾(本页 浏览器维)" },
     { src: "实测", name: "KYC", ep: "organizations/{org}/kyc_status", check: "Persona 身份核验状态机(not_required→created→verified/denied)", dim: "出口一致性 + 设备指纹" },
     { src: "静态", name: "支付", ep: "billing/gift/purchase_eligibility · overage/checkout", check: "购买资格预检、礼品卡路线、升级 step-up", dim: "IP 信誉 + 账单地区(本页 信誉维)" },
+    { src: "实测", name: "行为遥测", ep: "event_logging/v2 · rum", check: "打字延迟、粘贴长度分桶、api_repeated_paths(重复调用=脚本特征)、daily-visible-ms", dim: "本页不可测——走 UI、勿直打 API、保持日常使用画像" },
     { src: "实测", name: "运行时", ep: "account/standing · banners · challenge_redirect", check: "封禁/受限状态、风控横幅、人机验证重定向", dim: "自动化/ Cookie(本页 自动化维)" },
   ],
   errorsTitle: "错误码速查",
@@ -194,7 +196,7 @@ zh.verdicts = {
 
 zh.history = { title: "检测历史", count: "本机共 {n} 次", empty: "完成两次检测后,这里会显示变化趋势", local: "仅存本机浏览器(localStorage),不上传。" };
 zh.fp = {
-  title: "浏览器指纹", hash: "指纹 ID", entropy: "估算熵", bits: "位", factors: "因子", more: "更多因子见专业视图",
+  title: "浏览器指纹", hash: "指纹 ID", entropy: "估算熵", bits: "位", factors: "因子", more: "更多因子见专业视图", claudeMark: "Claude 采集面", claudeNote: "据社区对 claude.ai 前端信标的公开观测,标记为 C 的因子属于其采集范围",
   unavailableNote: "以下因子不可用(可能被浏览器加固或扩展禁用)",
   local: "全部因子本地计算,哈希不上传。指纹相同意味着跨站可关联——多账号场景应让指纹随环境隔离。",
   pending: "待检测",
