@@ -305,3 +305,14 @@ en.account = {
 };
 
 en.statusSource = "Source: status.anthropic.com (Anthropic official) · 5 min cache · unrelated to this site";
+
+en.account.login.email = "Email (masked)";
+en.account.login.displayName = "Display name";
+en.account.login.trial = "Trial";
+en.account.login.trustedDevices = "Trusted devices";
+en.account.login.members = "Members";
+en.account.login.convs = "Conversations";
+en.account.login.anonId = "Anonymous ID (truncated)";
+en.account.login.banners = "Official banners";
+en.account.login.statuses = "Endpoint statuses";
+en.account.login.steps = "Open claude.ai → F12 → Console → paste & run → output copied → paste back here. Metadata only: org/account/KYC/trial/trusted devices/member & conversation counts/banners/device ID. Email masked; no conversation content is read.";

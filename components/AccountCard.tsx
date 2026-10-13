@@ -15,11 +15,20 @@ interface KeyResult {
 
 interface LoginScan {
   orgCount?: number;
+  orgName?: string;
   billing?: string;
   capabilities?: string[];
   kyc?: string;
   standing?: any;
   deviceId?: string;
+  anonId?: string;
+  emailMasked?: string;
+  displayName?: string;
+  trial?: string;
+  banners?: string[];
+  trustedDevices?: number;
+  memberCount?: number;
+  convCount?: number;
   gatesTrue?: number;
   gatesTotal?: number;
   rawStatus: Record<string, number>;
@@ -70,11 +79,22 @@ export default function AccountCard({ t }: { t: any }) {
   const out={};
   const g=async(u)=>{try{const r=await fetch(u,{credentials:'include'});return{s:r.status,j:await r.json().catch(()=>null)}}catch(e){return{s:0,j:null}}};
   out.orgs=await g('/api/organizations');
-  const org=out.orgs.j&&(out.orgs.j.uuid||out.orgs.j.org&&out.orgs.j.org.uuid||out.orgs.j[0]&&out.orgs.j[0].uuid);
-  if(org){out.access=await g('/api/bootstrap/'+org+'/current_user_access');out.kyc=await g('/api/organizations/'+org+'/kyc_status')}
+  const j=out.orgs.j;
+  const org=j&&(j.uuid||j.org&&j.org.uuid||j[0]&&j[0].uuid);
+  out.profile=await g('/api/account_profile');
+  if(org){
+    out.access=await g('/api/bootstrap/'+org+'/current_user_access');
+    out.kyc=await g('/api/organizations/'+org+'/kyc_status');
+    out.trial=await g('/api/organizations/'+org+'/trial_status');
+    out.members=await g('/api/organizations/'+org+'/members?limit=1');
+    out.convs=await g('/api/organizations/'+org+'/chat_conversations_v2?limit=1');
+  }
   out.standing=await g('/api/account/standing');
+  out.banners=await g('/api/banners');
+  out.devices=await g('/api/auth/trusted_devices');
   const m=document.cookie.match(/anthropic-device-id=([^;]+)/);
   out.deviceId=m?m[1].slice(0,12):null;
+  try{out.anonId=(localStorage.getItem('ajs_anonymous_id')||localStorage.getItem('antalytics_anonymous_id')||'').replace(/"/g,'').slice(0,20)}catch(e){}
   const s=JSON.stringify(out);
   try{await navigator.clipboard.writeText(s);console.log('OK 已复制,回到 ExitLens 粘贴')}catch(e){console.log(s)}
   return s;
@@ -95,16 +115,35 @@ export default function AccountCard({ t }: { t: any }) {
       const access = j.access?.j || {};
       const gates = access.feature_gates || access.gates || null;
       const gatesArr = gates && typeof gates === "object" ? Object.entries(gates) : [];
+      const profile = j.profile?.j || {};
+      const email = String(profile.email || profile.account?.email || "");
+      const trialJ = j.trial?.j || {};
+      const bannersJ = j.banners?.j;
+      const bannerList = Array.isArray(bannersJ) ? bannersJ : bannersJ?.banners || [];
+      const membersJ = j.members?.j;
+      const memberList = Array.isArray(membersJ) ? membersJ : membersJ?.members || [];
+      const convsJ = j.convs?.j;
+      const convCount = convsJ?.count ?? convsJ?.total_count ?? (Array.isArray(convsJ?.conversations) ? convsJ.conversations.length : undefined);
+      const devicesJ = j.devices?.j;
       setScan({
         orgCount: Array.isArray(orgs) ? orgs.length : orgObj ? 1 : 0,
+        orgName: orgObj?.name ? String(orgObj.name).slice(0, 24) : undefined,
         billing: orgObj?.billing_type || orgObj?.billing || undefined,
         capabilities: (orgObj?.capabilities || []).slice?.(0, 6) || [],
         kyc: j.kyc?.j?.status || j.kyc?.j?.kyc_status || (j.kyc ? "unknown" : undefined),
         standing: j.standing?.j,
         deviceId: j.deviceId || undefined,
+        anonId: j.anonId || undefined,
+        emailMasked: email ? email.replace(/^(.{2}).*(@.*)$/, "$1***$2") : undefined,
+        displayName: profile.display_name || profile.account?.display_name || undefined,
+        trial: trialJ.is_eligible !== undefined ? (trialJ.is_eligible ? "eligible" : "ineligible") : trialJ.active_trial || trialJ.trial_state || undefined,
+        banners: bannerList.map((b: any) => String(b?.type || b?.banner_type || "banner")).slice(0, 4),
+        trustedDevices: Array.isArray(devicesJ) ? devicesJ.length : undefined,
+        memberCount: memberList.length || undefined,
+        convCount,
         gatesTrue: gatesArr.length ? gatesArr.filter(([, v]) => v === true || (v as any)?.enabled === true).length : undefined,
         gatesTotal: gatesArr.length || undefined,
-        rawStatus: { orgs: j.orgs?.s, access: j.access?.s, kyc: j.kyc?.s, standing: j.standing?.s },
+        rawStatus: { orgs: j.orgs?.s, access: j.access?.s, kyc: j.kyc?.s, standing: j.standing?.s, profile: j.profile?.s, trial: j.trial?.s, banners: j.banners?.s, devices: j.devices?.s, members: j.members?.s, convs: j.convs?.s },
       });
     } catch {
       setScan(null);
@@ -179,12 +218,27 @@ export default function AccountCard({ t }: { t: any }) {
           </button>
         </div>
         {scan ? (
-          <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-[12px] fade-in">
-            <span className="text-muted">{t.login.org}: <b className="text-ink">{scan.orgCount ?? "—"}</b>{scan.billing ? ` · ${scan.billing}` : ""}</span>
-            <span className="text-muted">{t.login.kyc}: <b className="text-ink" style={{ color: scan.kyc === "not_required" ? "var(--good)" : scan.kyc === "denied" ? "var(--bad)" : undefined }}>{scan.kyc || "—"}</b></span>
-            <span className="text-muted">{t.login.device}: <code className="mono text-[11px]">{scan.deviceId || "—"}</code></span>
-            {scan.gatesTotal !== undefined ? <span className="text-muted">{t.login.gates}: <b className="text-ink">{scan.gatesTrue}/{scan.gatesTotal}</b></span> : null}
-            {scan.standing ? <span className="text-muted col-span-2">{t.login.standing}: <code className="mono text-[10.5px]">{JSON.stringify(scan.standing).slice(0, 120)}</code></span> : null}
+          <div className="mt-3 space-y-2.5 fade-in">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[12px]">
+              {scan.emailMasked ? <span className="text-muted">{t.login.email}: <code className="mono text-[11px]">{scan.emailMasked}</code></span> : null}
+              {scan.displayName ? <span className="text-muted">{t.login.displayName}: <b className="text-ink">{String(scan.displayName).slice(0, 20)}</b></span> : null}
+              <span className="text-muted">{t.login.org}: <b className="text-ink">{scan.orgCount ?? "—"}</b>{scan.orgName ? ` (${scan.orgName})` : ""}{scan.billing ? ` · ${scan.billing}` : ""}</span>
+              <span className="text-muted">{t.login.kyc}: <b className="text-ink" style={{ color: scan.kyc === "not_required" ? "var(--good)" : scan.kyc === "denied" ? "var(--bad)" : undefined }}>{scan.kyc || "—"}</b></span>
+              {scan.trial ? <span className="text-muted">{t.login.trial}: <b className="text-ink">{scan.trial}</b></span> : null}
+              {scan.gatesTotal !== undefined ? <span className="text-muted">{t.login.gates}: <b className="text-ink">{scan.gatesTrue}/{scan.gatesTotal}</b></span> : null}
+              <span className="text-muted">{t.login.device}: <code className="mono text-[11px]">{scan.deviceId || "—"}</code></span>
+              {scan.anonId ? <span className="text-muted">{t.login.anonId}: <code className="mono text-[11px]">{scan.anonId}</code></span> : null}
+              {scan.trustedDevices !== undefined ? <span className="text-muted">{t.login.trustedDevices}: <b className="text-ink">{scan.trustedDevices}</b></span> : null}
+              {scan.memberCount !== undefined ? <span className="text-muted">{t.login.members}: <b className="text-ink">{scan.memberCount}</b></span> : null}
+              {scan.convCount !== undefined ? <span className="text-muted">{t.login.convs}: <b className="text-ink">{scan.convCount}</b></span> : null}
+            </div>
+            {scan.banners?.length ? (
+              <div className="text-[12px] px-2.5 py-1.5 rounded-md" style={{ background: "color-mix(in srgb, var(--warn) 10%, transparent)" }}>
+                <b style={{ color: "var(--warn)" }}>{t.login.banners}:</b> {scan.banners.join(", ")}
+              </div>
+            ) : null}
+            {scan.standing ? <div className="text-[12px] text-muted">{t.login.standing}: <code className="mono text-[10.5px]">{JSON.stringify(scan.standing).slice(0, 140)}</code></div> : null}
+            <div className="text-[10px] text-muted">{t.login.statuses}: {Object.entries(scan.rawStatus).map(([k, v]) => `${k}:${v}`).join(" · ")}</div>
           </div>
         ) : null}
       </div>

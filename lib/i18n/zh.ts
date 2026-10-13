@@ -310,3 +310,14 @@ zh.account = {
 };
 
 zh.statusSource = "数据源 status.anthropic.com(Anthropic 官方状态页)· 5 分钟缓存 · 与本站服务无关";
+
+zh.account.login.email = "账号邮箱(脱敏)";
+zh.account.login.displayName = "显示名";
+zh.account.login.trial = "试用资格";
+zh.account.login.trustedDevices = "信任设备";
+zh.account.login.members = "成员数";
+zh.account.login.convs = "会话总数";
+zh.account.login.anonId = "匿名 ID(截断)";
+zh.account.login.banners = "官方横幅通知";
+zh.account.login.statuses = "各端点状态码";
+zh.account.login.steps = "在 claude.ai 任一页面按 F12 → Console 粘贴运行下方脚本 → 输出自动复制 → 回到此处粘贴解析。只读元数据:org/账号/KYC/试用/信任设备/成员与会话计数/官方横幅/设备 ID;邮箱脱敏显示,不读取任何会话内容。";

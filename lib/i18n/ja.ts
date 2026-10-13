@@ -305,3 +305,14 @@ ja.account = {
 };
 
 ja.statusSource = "出典 status.anthropic.com(Anthropic 公式)· 5 分キャッシュ · 当サイトとは無関係";
+
+ja.account.login.email = "メール(マスク)";
+ja.account.login.displayName = "表示名";
+ja.account.login.trial = "トライアル";
+ja.account.login.trustedDevices = "信頼デバイス";
+ja.account.login.members = "メンバー数";
+ja.account.login.convs = "会話総数";
+ja.account.login.anonId = "匿名 ID(切り詰め)";
+ja.account.login.banners = "公式バナー";
+ja.account.login.statuses = "各端点ステータス";
+ja.account.login.steps = "claude.ai で F12 → Console に貼り付け実行 → 出力自動コピー → ここに貼り付け。メタデータのみ:org/アカウント/KYC/トライアル/信頼デバイス/メンバーと会話数/バナー/デバイス ID。メールはマスク、会話内容は読まない。";
