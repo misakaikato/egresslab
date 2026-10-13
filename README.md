@@ -36,6 +36,23 @@ npm run dev                       # 开发
 | `POST /api/reputation` | `{ip, note}` 提交使用反馈 |
 | `GET /api/honeypot?ip=` | 蜜罐命中查询 |
 | `POST /api/honeypot` | 蜜罐上报(见下) |
+| `GET /api/v1/check?ip=&lang=zh` | **REST 评估**:情报+评分+门控+自然语言结论 |
+| `POST /api/v1/check` | 批量评估 `{ips:[...≤20], lang}` |
+| `GET /api/me[?format=text]` | curl 回显(curl localhost:3000/api/me?format=text) |
+
+### REST 评估 API(/api/v1/check)
+
+```bash
+# 单 IP:出口类型 / 风险旗标 / 原生性 / 前缀年龄 / 地区门控 / 自然语言结论
+curl -s "localhost:3000/api/v1/check?ip=64.51.26.194&lang=zh" | jq '{score, headline, verdicts}'
+
+# 批量(≤20):适合代理池入库前体检
+curl -s -X POST localhost:3000/api/v1/check \
+  -H 'content-type: application/json' \
+  -d '{"ips":["1.2.4.8","64.51.26.194"],"lang":"zh"}' | jq '.results[].headline'
+```
+
+评分口径:服务端可见维度(出口网络 35 + IP 信誉 15,覆盖 50/100),浏览器维度(泄漏/一致性/环境/自动化)需用页面检测。`lang` 支持 zh/en/ja。配置 `EGRESSLAB_API_KEY` 后需携带 `x-api-key` 头。每次调用写入本地信誉库。
 
 ### 蜜罐上报(为将来部署 Cowrie 等传感器预留)
 
