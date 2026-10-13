@@ -37,6 +37,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
                 <span className="font-display text-lg font-bold tracking-tight">ExitLens</span>
               </a>
               <a href={`/${locale}/card`} className="text-xs text-muted hover:text-accent hidden sm:inline">{dict(locale).cardPage.title}</a>
+              <a href={`/${locale}/scoring`} className="text-xs text-muted hover:text-accent hidden sm:inline">{dict(locale).scoringPage.title}</a>
               <span className="text-xs text-muted hidden sm:inline">{dict(locale).nav.tag}</span>
             </div>
             <div className="flex items-center gap-2">

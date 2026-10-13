@@ -15,7 +15,7 @@ export interface GeoSource {
   country?: string; // RDAP 注册国
 }
 
-async function jsonFetch(url: string, timeoutMs = 10000): Promise<any> {
+export async function jsonFetch(url: string, timeoutMs = 10000): Promise<any> {
   const res = await fetch(url, { signal: AbortSignal.timeout(timeoutMs), cache: "no-store", headers: { "user-agent": "exitlens/0.1" } });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();

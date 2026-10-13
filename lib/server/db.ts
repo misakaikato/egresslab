@@ -41,6 +41,9 @@ export function getDb(): DatabaseSync {
     CREATE TABLE IF NOT EXISTS intel_cache (
       key TEXT PRIMARY KEY, ts INTEGER, ttl_ms INTEGER, json TEXT
     );
+    CREATE TABLE IF NOT EXISTS shares (
+      id TEXT PRIMARY KEY, ts INTEGER, ttl_ms INTEGER, json TEXT
+    );
     CREATE TABLE IF NOT EXISTS ip2location_ranges (
       start_num INTEGER, end_num INTEGER, country_code TEXT,
       region_name TEXT, city_name TEXT, latitude REAL, longitude REAL, timezone TEXT

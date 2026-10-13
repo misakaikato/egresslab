@@ -415,3 +415,10 @@ zh.toolsBox = { title: "检测工具箱", desc: "按需手动触发:测速 / Tur
 zh.speed.unreachable = "不可达";
 zh.speed.blockedNote = "测速端点全部失败:常见于分流规则将 speed.cloudflare.com 甩直连后被重置——建议将其加入代理规则";
 zh.speed.pingFailed = "全球延迟探测失败:Globalping 限流或出口不可达。";
+zh.restored = "已恢复上次检测结果({t}),点「重新检测」刷新";
+
+zh.ipPage = { queryBtn: "查询 IP", unsupported: "地区不受支持", intelTitle: "IP 情报", asnHistory: "路由历史", now: "至今", queryFailed: "查询失败:IP 无效或数据源不可达" };
+
+zh.share = { btn: "分享链接", copied: "链接已复制", readonly: "只读分享", title: "ExitLens 检测报告" };
+
+zh.scoringPage = { title: "评分说明", intro: "总分为六个维度的加权平均(0-100,越高越稳);权重与门控为本项目自定义设计。评分反映本次访问暴露的网络与浏览器环境,不评估账号本身,也不代表任何平台的官方判定。", dimsTitle: "六维权重", gatesTitle: "硬性门控(优先于加权)", g1: "出口地区不在 Anthropic 支持列表 → 0 分(地区受限)", g2: "claude.ai 不可达 → 上限 30 分", g3: "被 Cloudflare 边缘挑战 / 地区判定冲突 → 上限 60 / 45 分", levelsTitle: "等级阈值", coverageNote: "未能测量的维度不计入分母;覆盖度低于 85% 时最高只给 watch 级。", srcTitle: "数据源" };

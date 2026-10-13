@@ -409,3 +409,10 @@ en.toolsBox = { title: "Detection toolbox", desc: "Manual tools: speed test / Tu
 en.speed.unreachable = "unreachable";
 en.speed.blockedNote = "All speed endpoints failed: common when routing rules send speed.cloudflare.com direct and it gets reset — add it to your proxy rules";
 en.speed.pingFailed = "Global latency failed: Globalping rate limit or unreachable exit.";
+en.restored = "Restored last scan ({t}) — hit Rescan to refresh";
+
+en.ipPage = { queryBtn: "Look up", unsupported: "region unsupported", intelTitle: "IP intelligence", asnHistory: "Routing history", now: "now", queryFailed: "Query failed: invalid IP or sources unreachable" };
+
+en.share = { btn: "Share link", copied: "Link copied", readonly: "Shared read-only", title: "ExitLens Report" };
+
+en.scoringPage = { title: "How scoring works", intro: "Total is a weighted average of six dimensions (0-100, higher is safer); weights and gates are this project's own design. The score reflects the network and browser environment exposed by this visit — not the account, and not any platform's official verdict.", dimsTitle: "Dimension weights", gatesTitle: "Hard gates (override weighting)", g1: "Exit region outside Anthropic's supported list → 0 (region-blocked)", g2: "claude.ai unreachable → capped at 30", g3: "Edge-challenged by Cloudflare / region conflict → capped at 60 / 45", levelsTitle: "Level thresholds", coverageNote: "Untested dimensions are excluded from the denominator; below 85% coverage the best level is watch.", srcTitle: "Data sources" };

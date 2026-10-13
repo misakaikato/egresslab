@@ -63,6 +63,9 @@ export default function Detector({ locale }: { locale: string }) {
   const [dnsLeak, setDnsLeak] = useState<DnsLeakResult | null>(null);
   const [copiedFmt, setCopiedFmt] = useState<"md" | "json" | null>(null);
   const [cfg, setCfg] = useState<{ turnstile: string | null; recaptcha: string | null } | null>(null);
+  const [restoredAt, setRestoredAt] = useState<number | null>(null);
+  const [shareState, setShareState] = useState<"idle" | "busy" | "done" | "fail">("idle");
+  const skipSaveRef = useRef(false);
   const [platform, setPlatform] = useState<"claude" | "openai" | "media" | "tiktok">("claude");
   const [mode, setMode] = useState<"simple" | "pro">("simple");
   useEffect(() => {
@@ -78,6 +81,32 @@ export default function Detector({ locale }: { locale: string }) {
   const [status, setStatus] = useState<{ indicator: string; description: string; components: { name: string; status: string }[]; fetched_at: string } | null>(null);
   const [statusOpen, setStatusOpen] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+
+  // 恢复上次检测结果(本机持久化)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("exitlens:last-scan");
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      if (!s?.probes?.length) return;
+      skipSaveRef.current = true;
+      setProbes(s.probes);
+      setDirect(s.direct || { ip: "", via: "", exits: [] });
+      setDual(s.dual || { v4: null, v6: null });
+      if (s.intel) setIntel(s.intel);
+      setWebrtc(s.webrtc || { status: "idle", publicIps: [] });
+      if (s.env) setEnv(s.env);
+      if (s.auto) setAuto(s.auto);
+      if (s.dnsCheck) setDns(s.dnsCheck);
+      setDnsLeak(s.dnsLeak ?? null);
+      if (s.fp) setFp(s.fp);
+      if (s.aiPack) setAiPack(s.aiPack);
+      if (s.rep) setRep(s.rep);
+      if (s.history) setHistory(s.history);
+      setRestoredAt(s.ts);
+      setPhase("done");
+    } catch {}
+  }, []);
 
   useEffect(() => {
     fetch("/api/config", { cache: "no-store" }).then((r) => r.json()).then((j) => setCfg({ turnstile: j?.turnstile || null, recaptcha: j?.recaptcha || null })).catch(() => {});
@@ -162,15 +191,37 @@ export default function Detector({ locale }: { locale: string }) {
     setDnsLeak(await dnsLeakP);
     const exitIpForHist = traceList[0]?.ip || directR.ip;
     const exitCountry = traceList[0]?.country || "";
-    if (exitIpForHist) setHistory(recordExit(exitIpForHist, String(exitCountry || "").toUpperCase()));
-    const repIp = exitIpForHist;
-    if (repIp) {
+    const histV = exitIpForHist ? recordExit(exitIpForHist, String(exitCountry || "").toUpperCase()) : null;
+    if (histV) setHistory(histV);
+    let repV = null;
+    if (exitIpForHist) {
       try {
-        const rj = await fetch(`/api/reputation?ip=${encodeURIComponent(repIp)}`).then((r) => r.json());
-        setRep(rj);
+        repV = await fetch(`/api/reputation?ip=${encodeURIComponent(exitIpForHist)}`).then((r) => r.json());
+        setRep(repV);
       } catch {}
     }
     setStepBits(0b1111);
+    try {
+      localStorage.setItem(
+        "exitlens:last-scan",
+        JSON.stringify({
+          ts: Date.now(),
+          probes: traceList,
+          direct: directR,
+          dual: dualR,
+          intel: intelP ? await intelP : null,
+          webrtc: webrtcR,
+          env: envR,
+          auto: collectAutomation(),
+          dnsCheck: dnsR,
+          dnsLeak: await dnsLeakP,
+          fp: fpR,
+          aiPack: aiR,
+          rep: repV,
+          history: histV,
+        })
+      );
+    } catch {}
     setPhase("done");
   }, []);
 
@@ -234,6 +285,10 @@ export default function Detector({ locale }: { locale: string }) {
   useEffect(() => {
     if (phase !== "done" || !score || !head || !vCards) return;
     if (Date.now() - savedAt.current < 3000) return;
+    if (skipSaveRef.current) {
+      skipSaveRef.current = false;
+      return;
+    }
     savedAt.current = Date.now();
     const rec: ScanRecord = {
       ts: Date.now(),
@@ -249,6 +304,40 @@ export default function Detector({ locale }: { locale: string }) {
     };
     setScans(saveScan(rec));
   }, [phase, score, head, vCards]);
+
+  const shareReport = async () => {
+    if (!score || shareState === "busy") return;
+    setShareState("busy");
+    try {
+      const res = await fetch("/api/share", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          data: {
+            ts: Date.now(),
+            score: { total: score.score, level: score.level, gate: score.gate },
+            headline: head?.text,
+            exit: claude?.ip || direct.ip,
+            verdicts: vCards?.map((c) => ({ title: c.title, subtitle: c.subtitle })) ?? [],
+            conclusions: conclusions.map((c) => ({ title: c.title, confidence: c.confidence })),
+            intel: intel ? { type: intel.network?.asn_type, country: intel.geo?.country_code } : null,
+            envScore: env?.score,
+          },
+        }),
+      });
+      const j = await res.json();
+      if (j?.ok && j.path) {
+        const url = `${window.location.origin}${j.path}`;
+        try {
+          await navigator.clipboard.writeText(url);
+        } catch {}
+        setShareState("done");
+        setTimeout(() => setShareState("idle"), 2000);
+      } else setShareState("fail");
+    } catch {
+      setShareState("fail");
+    }
+  };
 
   const exportReport = async (fmt: "md" | "json") => {
     if (!score) return;
@@ -367,6 +456,22 @@ export default function Detector({ locale }: { locale: string }) {
           ) : null}
         </div>
         <p className="text-[11px] text-muted mt-4 max-w-xl mx-auto">{t.hero.privacy}</p>
+      <form
+        className="mt-4 flex items-center justify-center gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const v = (e.currentTarget.elements.namedItem("q") as HTMLInputElement)?.value.trim();
+          if (v) window.location.href = `/${locale}/ip/${encodeURIComponent(v)}`;
+        }}
+      >
+        <input name="q" placeholder="1.2.3.4" className="mono text-[12px] px-3 py-1.5 w-44 rounded-full bg-surface border border-line outline-none focus:border-accent" />
+        <button type="submit" className="pill card-hover cursor-pointer">{t.ipPage.queryBtn}</button>
+      </form>
+      {restoredAt && !busy ? (
+        <p className="text-[11px] mt-2 fade-in" style={{ color: "var(--accent)" }}>
+          {t.restored.replace("{t}", new Date(restoredAt).toLocaleString())}
+        </p>
+      ) : null}
       </section>
 
       {/* 检测进度面板 v2 */}
@@ -451,6 +556,7 @@ export default function Detector({ locale }: { locale: string }) {
           <div className="flex justify-end gap-2">
             <button onClick={() => exportReport("md")} className={`pill card-hover cursor-pointer ${copiedFmt === "md" ? "flash-good" : ""}`}>{copiedFmt === "md" ? t.export.copied : t.export.md}</button>
             <button onClick={() => exportReport("json")} className={`pill card-hover cursor-pointer ${copiedFmt === "json" ? "flash-good" : ""}`}>{copiedFmt === "json" ? t.export.copied : t.export.json}</button>
+            <button onClick={shareReport} className={`pill card-hover cursor-pointer ${shareState === "done" ? "flash-good" : ""}`}>{shareState === "busy" ? "…" : shareState === "done" ? t.share.copied : t.share.btn}</button>
           </div>
           <div className="grid md:grid-cols-2 gap-4 md:items-start stagger">
             {vCards.map((c) => (
@@ -534,6 +640,7 @@ export default function Detector({ locale }: { locale: string }) {
             <div className="flex gap-2 mt-5">
               <button onClick={() => exportReport("md")} className={`pill card-hover cursor-pointer ${copiedFmt === "md" ? "flash-good" : ""}`}>{copiedFmt === "md" ? t.export.copied : t.export.md}</button>
               <button onClick={() => exportReport("json")} className={`pill card-hover cursor-pointer ${copiedFmt === "json" ? "flash-good" : ""}`}>{copiedFmt === "json" ? t.export.copied : t.export.json}</button>
+              <button onClick={shareReport} className={`pill card-hover cursor-pointer ${shareState === "done" ? "flash-good" : ""}`}>{shareState === "busy" ? "…" : shareState === "done" ? t.share.copied : t.share.btn}</button>
             </div>
             {intelFailed ? <p className="text-[11px] text-muted mt-4">{t.err.intelFailed}</p> : null}
           </div>

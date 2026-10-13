@@ -409,3 +409,10 @@ ja.toolsBox = { title: "検査ツールボックス", desc: "手動ツール:ス
 ja.speed.unreachable = "到達不可";
 ja.speed.blockedNote = "測速端点が全滅:分流ルールで speed.cloudflare.com が直結になり破棄された場合が多い——プロキシルールに追加を";
 ja.speed.pingFailed = "全球遅延失敗:Globalping 制限または出口到達不可。" ;
+ja.restored = "前回の検査結果を復元({t})——再検査で更新";
+
+ja.ipPage = { queryBtn: "IP 検索", unsupported: "地域非対応", intelTitle: "IP インテリ", asnHistory: "ルーティング履歴", now: "現在", queryFailed: "検索失敗:IP 無効かソース到達不可" };
+
+ja.share = { btn: "共有リンク", copied: "リンク复制済", readonly: "読み取り専用", title: "ExitLens レポート" };
+
+ja.scoringPage = { title: "スコアリング説明", intro: "総合スコアは 6 次元の加重平均(0-100・高いほど安全)。重みとゲートは本プロジェクトの独自設計。この訪問で露呈したネットワークとブラウザ環境を反映し、アカウント自体や公式判定ではない。", dimsTitle: "次元の重み", gatesTitle: "ハードゲート(加重より優先)", g1: "出口地域が Anthropic 対象外 → 0 点", g2: "claude.ai 到達不可 → 上限 30", g3: "CF エッジ挑戦 / 地域矛盾 → 上限 60 / 45", levelsTitle: "レベル閾値", coverageNote: "未測定次元は分母から除外。カバー 85% 未満は最高 watch。", srcTitle: "データソース" };

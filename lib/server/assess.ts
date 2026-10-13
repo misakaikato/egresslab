@@ -68,7 +68,8 @@ export async function assessIp(rawIp: string, lang = "zh"): Promise<AssessResult
     gate: score.gate,
     coverage: `${score.coverage}/100`,
     note: COVERAGE_NOTE[lang as "zh" | "en" | "ja"] || COVERAGE_NOTE.zh,
-  };
+  } as any;
+  (base.score as any).dimensions = score.dimensions;
   base.headline = headline(score, t).text;
   base.verdicts = buildVerdicts(
     { score, intel, webrtc: { status: "idle", publicIps: [] }, env: null, auto: null, dns: null, history: null, directExitCount: 0, aiReachable: 0, aiTotal: 0 },
