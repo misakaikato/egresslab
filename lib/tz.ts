@@ -4,8 +4,19 @@
 // 旧实现的"格式化成字符串再按本地解析"会得到 tzoff - lofoff,与系统偏移直接比较必然误报
 export function tzOffsetMinutes(tz: string, at: Date = new Date()): number | null {
   try {
-    const s = at.toLocaleString("en-US", { timeZone: tz });
-    const asUtc = Date.parse(`${s}Z`);
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: tz,
+      hour12: false,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    }).formatToParts(at);
+    const g = (t: string) => parts.find((p) => p.type === t)?.value || "00";
+    const hour = g("hour") === "24" ? "00" : g("hour");
+    const asUtc = Date.parse(`${g("year")}-${g("month")}-${g("day")}T${hour}:${g("minute")}:${g("second")}Z`);
     if (Number.isNaN(asUtc)) return null;
     return Math.round((asUtc - at.getTime()) / 60000);
   } catch {
