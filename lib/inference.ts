@@ -120,7 +120,7 @@ export function inferConclusions(input: InferenceInput, t: any): Conclusion[] {
   }
 
   // ── R9: 反检测环境 ──
-  const spoofLies = ["platformFonts", "emojiPlatform", "webglMismatch", "platformClaim", "tzSpoof", "langSpoof", "fontsChannel"].filter((k) => lieKeys.has(k)).length;
+  const spoofLies = ["platformFonts", "emojiPlatform", "webglMismatch", "platformClaim", "tzSpoof", "langSpoof"].filter((k) => lieKeys.has(k)).length;
   if (spoofLies >= 2 && (risk.is_vpn || risk.is_proxy || risk.is_datacenter)) {
     out.push({ id: "antidetect", tone: "warn", confidence: "high", title: I.antidetect.title, subtitle: I.antidetect.sub, evidence: [I.ev.lies.replace("{n}", String(spoofLies)), ...(lies.slice(0, 3).map((l) => l.key))], });
   }

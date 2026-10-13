@@ -1,6 +1,7 @@
 // 浏览器指纹(全量):Canvas/WebGL(+2)/WebGPU/Audio/字体(存在+宽度)/解码器矩阵/
 // 语音列表/UA-CH/Emoji/键盘布局/显示器/Intl/窗口几何/存储/媒体设备/网络/计时精度
 // 全部本地计算,哈希不上传;另含伪装矛盾检测(lies)
+import { tzOffsetMinutes, systemOffsetMinutes, platformsContradict } from "../tz";
 export interface FingerprintComponent {
   key: string;
   value: string;
@@ -355,15 +356,7 @@ function osFromUa(ua: string): string {
   return "other";
 }
 
-function tzOffsetMinutesNow(tz: string): number | null {
-  try {
-    const now = new Date();
-    const asLocal = new Date(now.toLocaleString("en-US", { timeZone: tz }));
-    return Math.round((asLocal.getTime() - now.getTime()) / 60000);
-  } catch {
-    return null;
-  }
-}
+// 时区偏移与平台分桶见 lib/tz.ts(修正:旧实现差一个本地偏移,与系统偏移直接比较必误报)
 
 export async function collectFingerprint(): Promise<FingerprintResult> {
   const components: FingerprintComponent[] = [];
@@ -482,14 +475,14 @@ export async function collectFingerprint(): Promise<FingerprintResult> {
   if (gl1.renderer !== "unavailable" && gl2.renderer !== "unavailable" && gl1.renderer && gl2.renderer && gl1.renderer !== gl2.renderer) {
     lies.push({ key: "webglMismatch", detail: `WebGL1 "${gl1.renderer}" != WebGL2 "${gl2.renderer}"` });
   }
-  // 4. UA-CH platform vs navigator.platform
-  if (uaChPlatform && nav.platform && uaChPlatform.toLowerCase() !== nav.platform.toLowerCase()) {
-    lies.push({ key: "platformClaim", detail: `UA-CH "${uaChPlatform}" != navigator.platform "${nav.platform}"` });
+  // 4. UA-CH platform vs navigator.platform(分桶比较:macOS/MacIntel 属同桶正常组合)
+  if (uaChPlatform && nav.platform && platformsContradict(uaChPlatform, nav.platform)) {
+    lies.push({ key: "platformClaim", detail: `UA-CH "${uaChPlatform}" vs navigator.platform "${nav.platform}"` });
   }
-  // 5. Intl 时区 vs 系统偏移
+  // 5. Intl 时区 vs 系统偏移(同一时刻、同一符号体系比较)
   if (tz) {
-    const expect = tzOffsetMinutesNow(tz);
-    const actual = -new Date().getTimezoneOffset();
+    const expect = tzOffsetMinutes(tz);
+    const actual = systemOffsetMinutes();
     if (expect !== null && Math.abs(expect - actual) > 0) lies.push({ key: "tzSpoof", detail: `Intl TZ ${tz} offset ${expect}m != system ${actual}m` });
   }
   // 6. navigator.language vs Intl locale
@@ -500,11 +493,6 @@ export async function collectFingerprint(): Promise<FingerprintResult> {
       lies.push({ key: "langSpoof", detail: `navigator.language "${navigator.language}" != Intl locale "${intlLocale}"` });
     }
   } catch {}
-  // 7.5 字体双通道不一致
-  const fcCount = fontsCheckChannel();
-  if (fcCount >= 0 && fontCount > 0 && Math.abs(fcCount - fontCount) >= 3) {
-    lies.push({ key: "fontsChannel", detail: `canvas ${fontCount} vs fonts.check ${fcCount}` });
-  }
   // 7.6 时钟偏移异常(>1h)
   if (sv.skewMs !== null && Math.abs(sv.skewMs) > 3600_000) {
     lies.push({ key: "clockSkew", detail: `clock off by ${Math.round(sv.skewMs / 60000)} min` });
@@ -710,16 +698,6 @@ async function sdpFingerprint(): Promise<{ fp: string; display: string }> {
       resolve({ fp: "unavailable", display: "—" });
     }
   });
-}
-
-// fonts.check 第二通道(绕过部分 canvas 拦截)
-function fontsCheckChannel(): number {
-  try {
-    if (!document.fonts?.check) return -1;
-    return EXT_FONTS.filter((f) => document.fonts.check(`12px "${f}"`)).length;
-  } catch {
-    return -1;
-  }
 }
 
 // 服务器视角:时钟偏移 + 头序 + 客户端提示头

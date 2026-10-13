@@ -199,7 +199,7 @@ ja.fp = {
   pending: "待機",
   keys: { canvas: "Canvas 描画", webgl: "WebGL レンダラー", webgl2: "WebGL2 拡張", audio: "オーディオ描画", audioDetail: "オーディオ機器", fonts: "検出フォント", fontWidths: "フォント幅", screen: "画面", geometry: "ウィンドウ寸法", hardware: "ハードウェア", timezone: "タイムゾーン", language: "言語", platform: "プラットフォーム", codecs: "コーデック行列", voices: "音声リスト", uach: "UA-CH 高エントロピー", emoji: "Emoji 描画", keyboard: "キーボード配列", display: "ディスプレイ能力", intl: "Intl 挙動", webgpu: "WebGPU", storage: "ストレージ割当", mediaDevices: "メディアデバイス", connection: "ネットワーク種別", timing: "タイミング精度", apiSurface: "API 存在面", permissions: "権限状態", refresh: "リフレッシュレート", topology: "ディスプレイ構成", textMetrics: "テキスト計測", scrollbar: "スクロールバー幅", math: "数値エンジン", webcodecs: "HW コーデック", wasm: "WASM 特性", sdp: "SDP 構造", clockSkew: "時計ずれ", headerOrder: "HTTP ヘッダ順", incognito: "シークレット兆候", privacySet: "プライバシー設定" },
   lies: { title: "偽装矛盾検出", none: "各因子が相互に整合・偽装の兆候なし",
-    keys: { platformFonts: "プラットフォームとフォントの矛盾", emojiPlatform: "Emoji と端末の矛盾", webglMismatch: "WebGL1/2 不一致", platformClaim: "プラットフォーム主張の相違", tzSpoof: "TZ 偽装", langSpoof: "言語偽装", timingReduced: "計時精度低下(抗指紋措置)", fontsChannel: "フォント二重経路の不一致", clockSkew: "時計ずれ異常" } },
+    keys: { platformFonts: "プラットフォームとフォントの矛盾", emojiPlatform: "Emoji と端末の矛盾", webglMismatch: "WebGL1/2 不一致", platformClaim: "プラットフォーム主張の相違", tzSpoof: "TZ 偽装", langSpoof: "言語偽装", timingReduced: "計時精度低下(抗指紋措置)", clockSkew: "時計ずれ異常" } },
 };
 
 ja.statusLevels = { none: "全正常", minor: "軽微な障害", major: "部分的障害", critical: "重大障害", maintenance: "メンテナンス", unknown: "不明" };

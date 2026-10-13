@@ -1,6 +1,7 @@
 // 六维评分引擎:权重与阈值定义见 specs/2026-10-12-exitlens.md
 import type { Dimension, ScoreInput, ScoreResult } from "./types";
 import { isSupportedCountry } from "./countries";
+import { tzOffsetMinutes } from "./tz";
 
 const WEIGHTS: Record<Dimension["id"], number> = {
   network: 35,
@@ -85,17 +86,6 @@ function dimConsistency(e: ScoreInput): { frac: number | null; code: string } {
 }
 
 // browser 维:时区一致性 vs CN 环境分,取更差
-function tzOffsetMinutes(tz: string): number | null {
-  try {
-    const now = new Date();
-    const s = now.toLocaleString("en-US", { timeZone: tz });
-    const asLocal = new Date(s);
-    return Math.round((asLocal.getTime() - now.getTime()) / 60000);
-  } catch {
-    return null;
-  }
-}
-
 export function timezoneConsistency(browserTz: string, ipTz: string): number | null {
   if (!browserTz || !ipTz) return null;
   const a = tzOffsetMinutes(browserTz);
