@@ -8,3 +8,4 @@ data/lists/
 *.tsbuildinfo
 .DS_Store
 data/egresslab.db*
+LOCAL-TODO.md
