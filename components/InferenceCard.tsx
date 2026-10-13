@@ -24,7 +24,7 @@ export default function InferenceCard({ conclusions, t }: { conclusions: Conclus
       </div>
       <div className="divide-y divide-line">
         {conclusions.map((c, i) => (
-          <div key={c.id}>
+          <div key={c.id} className="rise-item" style={{ animationDelay: `${i * 0.05}s` }}>
             <button className="w-full text-left px-5 py-3 flex items-start gap-3" onClick={() => setOpen(open === i ? null : i)}>
               <span className="mt-1.5 w-2 h-2 rounded-full shrink-0" style={{ background: TONE[c.tone] }} />
               <span className="flex-1 min-w-0">

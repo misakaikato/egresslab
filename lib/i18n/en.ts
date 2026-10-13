@@ -316,3 +316,5 @@ en.account.login.anonId = "Anonymous ID (truncated)";
 en.account.login.banners = "Official banners";
 en.account.login.statuses = "Endpoint statuses";
 en.account.login.steps = "Open claude.ai → F12 → Console → paste & run → output copied → paste back here. Metadata only: org/account/KYC/trial/trusted devices/member & conversation counts/banners/device ID. Email masked; no conversation content is read.";
+
+en.testingDone = "Scan complete";

@@ -1,10 +1,10 @@
 "use client";
 // Anthropic 三域名连通性探测表
 import type { TraceProbe } from "@/lib/types";
-import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle } from "lucide-react";
 
 function StatusIcon({ status }: { status: TraceProbe["status"] }) {
-  if (status === "pending") return <Loader2 size={15} className="text-muted" />;
+  if (status === "pending") return <span className="typing-dots" style={{ color: "var(--muted)" }}><i /><i /><i /></span>;
   if (status === "ok") return <CheckCircle2 size={15} style={{ color: "var(--good)" }} />;
   return <XCircle size={15} style={{ color: "var(--bad)" }} />;
 }

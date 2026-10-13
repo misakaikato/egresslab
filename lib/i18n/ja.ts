@@ -316,3 +316,5 @@ ja.account.login.anonId = "匿名 ID(切り詰め)";
 ja.account.login.banners = "公式バナー";
 ja.account.login.statuses = "各端点ステータス";
 ja.account.login.steps = "claude.ai で F12 → Console に貼り付け実行 → 出力自動コピー → ここに貼り付け。メタデータのみ:org/アカウント/KYC/トライアル/信頼デバイス/メンバーと会話数/バナー/デバイス ID。メールはマスク、会話内容は読まない。";
+
+ja.testingDone = "検査完了";

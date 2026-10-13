@@ -56,9 +56,15 @@ export default function Detector({ locale }: { locale: string }) {
     try { const v = localStorage.getItem("exitlens:view") ?? localStorage.getItem("egresslab:view"); if (v === "pro" || v === "simple") setMode(v); } catch {}
   }, []);
   const switchMode = (m: "simple" | "pro") => { setMode(m); try { localStorage.setItem("exitlens:view", m); } catch {} };
+  useEffect(() => {
+    if (phase !== "running") return;
+    const iv = setInterval(() => setElapsed((e) => e + 0.25), 250);
+    return () => clearInterval(iv);
+  }, [phase]);
   const [rep, setRep] = useState<RepData | null>(null);
   const [status, setStatus] = useState<{ indicator: string; description: string; components: { name: string; status: string }[]; fetched_at: string } | null>(null);
   const [statusOpen, setStatusOpen] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
     fetch("/api/claude/status").then((r) => r.json()).then((j) => { if (j?.ok) setStatus({ indicator: j.indicator, description: j.description, components: j.components || [], fetched_at: j.fetched_at }); }).catch(() => {});
@@ -70,6 +76,7 @@ export default function Detector({ locale }: { locale: string }) {
 
   const run = useCallback(async () => {
     setPhase("running");
+    setElapsed(0);
     setStep(0);
     setProbes([]);
     setIntel(null);
@@ -249,8 +256,8 @@ export default function Detector({ locale }: { locale: string }) {
         <h1 className="font-display text-4xl sm:text-5xl font-bold mt-5 leading-tight tracking-tight">{t.hero.title}</h1>
         <p className="text-soft text-sm sm:text-[15px] leading-relaxed max-w-2xl mx-auto mt-4">{t.hero.desc}</p>
         <div className="mt-7 flex items-center justify-center gap-3">
-          <button onClick={run} disabled={busy} className="px-6 py-2.5 rounded-full bg-accent text-white font-semibold text-sm flex items-center gap-2 disabled:opacity-60 hover:opacity-95 transition-opacity">
-            {busy ? <Activity size={15} className="spin" /> : phase === "done" ? <RotateCw size={15} /> : <Play size={15} />}
+          <button onClick={run} disabled={busy} className="press px-6 py-2.5 rounded-full bg-accent text-white font-semibold text-sm flex items-center gap-2 disabled:opacity-60 hover:opacity-95 transition-opacity">
+            {busy ? <span className="pulse-dot" /> : phase === "done" ? <RotateCw size={15} /> : <Play size={15} />}
             {busy ? t.hero.testing : phase === "done" ? t.hero.rescan : t.hero.start}
           </button>
           {status ? (
@@ -296,14 +303,64 @@ export default function Detector({ locale }: { locale: string }) {
         <p className="text-[11px] text-muted mt-4 max-w-xl mx-auto">{t.hero.privacy}</p>
       </section>
 
-      {/* 步骤条 */}
-      {phase !== "idle" ? (
-        <div className="flex items-center justify-center gap-2 flex-wrap mb-8">
-          {steps.map((label, i) => (
-            <span key={i} className="pill" style={i < step ? { borderColor: "var(--good)", color: "var(--good)" } : i === step && busy ? { borderColor: "var(--accent)", color: "var(--accent)" } : {}}>
-              {i < step ? "✓" : i === step && busy ? "•" : ""} {label}
+      {/* 检测进度面板 v2 */}
+      {busy || phase === "done" ? (
+        <div className="card p-5 mb-6 overflow-hidden relative" style={{ opacity: phase === "done" ? 0.55 : 1, transition: "opacity .5s" }}>
+          <div className="flex items-center justify-between gap-2">
+            {steps.map((label, i) => {
+              const done = i < step || phase === "done";
+              const active = i === step && busy;
+              return (
+                <div key={i} className="flex items-center gap-1.5 min-w-0">
+                  <span
+                    className="shrink-0 w-5 h-5 rounded-full grid place-items-center text-[10px] font-bold transition-all"
+                    style={{
+                      background: done ? "var(--good)" : active ? "var(--accent)" : "var(--line)",
+                      color: done || active ? "#fff" : "var(--muted)",
+                      animation: active ? "pulse-soft 1.2s ease-in-out infinite" : undefined,
+                    }}
+                  >
+                    {done ? (
+                      <svg viewBox="0 0 12 12" width="11" height="11" fill="none">
+                        <path className="step-check" d="M2.5 6.2 5 8.7 9.5 3.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
+                      </svg>
+                    ) : active ? (
+                      <span className="inner-dot" />
+                    ) : (
+                      i + 1
+                    )}
+                  </span>
+                  <span className={`text-[11.5px] truncate transition-colors ${active ? "text-accent font-semibold" : done ? "text-soft" : "text-muted"}`}>{label}</span>
+                  {i < steps.length - 1 ? <span className={`step-link hidden sm:block ${i < step || phase === "done" ? "filled" : ""}`} /> : null}
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex justify-between items-baseline mt-2.5 text-[11.5px]" style={{ color: "var(--muted)" }}>
+            <span>
+              {busy ? (
+                <>
+                  ▸ {steps[Math.min(step, steps.length - 1)]}
+                  <span className="typing-dots"><i /><i /><i /></span>
+                </>
+              ) : (
+                <span style={{ color: "var(--good)" }}>✓ {t.testingDone || "完成"}</span>
+              )}
             </span>
-          ))}
+            <span className="mono tabular-nums">{elapsed.toFixed(1)}s · {Math.min(step + 1, steps.length)} / {steps.length}</span>
+          </div>
+          <div className="progress-track mt-2 h-1.5 rounded-full bg-line overflow-hidden">
+            <span className="tick" style={{ left: "25%" }} />
+            <span className="tick" style={{ left: "50%" }} />
+            <span className="tick" style={{ left: "75%" }} />
+            <div
+              className="progress-fill h-full rounded-full"
+              style={{
+                width: `${Math.min(100, Math.round(((phase === "done" ? steps.length : step) / steps.length) * 100))}%`,
+                background: "linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 60%, var(--good)))",
+              }}
+            />
+          </div>
         </div>
       ) : null}
 
@@ -329,7 +386,7 @@ export default function Detector({ locale }: { locale: string }) {
             <button onClick={() => exportReport("md")} className="pill card-hover cursor-pointer">{t.export.md}</button>
             <button onClick={() => exportReport("json")} className="pill card-hover cursor-pointer">{t.export.json}</button>
           </div>
-          <div className="grid md:grid-cols-2 gap-4 md:items-start">
+          <div className="grid md:grid-cols-2 gap-4 md:items-start stagger">
             {vCards.map((c) => (
               <VerdictCard key={c.key} title={c.title} subtitle={c.subtitle} tone={c.tone} label={t.expand}>
                 {c.expandKey === "path" ? (

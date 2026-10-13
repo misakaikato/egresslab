@@ -3,7 +3,7 @@
 // A) API Key 浏览器直连检测(不经本站服务器,不存储)
 // B) 登录态采集脚本:用户在 claude.ai 控制台自运行,粘贴回结果解析
 import { useState } from "react";
-import { KeyRound, ClipboardPaste, ShieldCheck, Loader2 } from "lucide-react";
+import { KeyRound, ClipboardPaste, ShieldCheck } from "lucide-react";
 
 interface KeyResult {
   status: number;
@@ -171,7 +171,7 @@ export default function AccountCard({ t }: { t: any }) {
             autoComplete="off"
           />
           <button onClick={runKeyCheck} disabled={!key.trim() || keyBusy} className="shrink-0 px-3 py-1.5 rounded-lg bg-accent text-white text-xs font-semibold disabled:opacity-40 flex items-center gap-1.5">
-            {keyBusy ? <Loader2 size={12} className="spin" /> : <ShieldCheck size={12} />}
+            {keyBusy ? <span className="pulse-dot" style={{ background: "var(--good)" }} /> : <ShieldCheck size={12} />}
             {t.key.run}
           </button>
         </div>

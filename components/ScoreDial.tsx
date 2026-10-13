@@ -1,6 +1,28 @@
 "use client";
-// 评分表盘:SVG 环形 + 等级色
+// 评分表盘:SVG 环形 + 数字滚动 + 等级色
+import { useEffect, useState } from "react";
 import type { ScoreResult } from "@/lib/types";
+
+export function useCountUp(target: number, duration = 900) {
+  const [v, setV] = useState(0);
+  useEffect(() => {
+    let raf = 0;
+    const reduced = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced || target <= 0) {
+      setV(target);
+      return;
+    }
+    const t0 = performance.now();
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - t0) / duration);
+      setV(Math.round(target * (1 - Math.pow(1 - t, 5))));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration]);
+  return v;
+}
 
 const LEVEL_COLOR: Record<string, string> = {
   low: "var(--good)",
@@ -16,6 +38,7 @@ export default function ScoreDial({ score, level, levelLabel, hint, coverage }: 
   const C = 2 * Math.PI * R;
   const color = LEVEL_COLOR[level] || "var(--muted)";
   const offset = C * (1 - Math.min(100, Math.max(0, score)) / 100);
+  const shown = useCountUp(score);
   return (
     <div className="flex flex-col items-center">
       <div className="relative w-[180px] h-[180px]">
@@ -25,7 +48,7 @@ export default function ScoreDial({ score, level, levelLabel, hint, coverage }: 
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-5xl font-bold tabular-nums" style={{ color }}>
-            {score}
+            {shown}
           </span>
           <span className="text-xs text-muted mt-1">{hint}</span>
         </div>

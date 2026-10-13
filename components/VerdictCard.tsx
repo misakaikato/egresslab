@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 import { ChevronDown, Check, AlertTriangle, XCircle, MinusCircle } from "lucide-react";
 import type { Tone } from "@/lib/verdicts";
+import { useCountUp } from "./ScoreDial";
 
 const TONE_META: Record<Tone, { color: string; bar: string; Icon: any }> = {
   good: { color: "var(--good)", bar: "var(--good)", Icon: Check },
@@ -13,12 +14,13 @@ const TONE_META: Record<Tone, { color: string; bar: string; Icon: any }> = {
 
 export function HeadlineBand({ score, text, tone, levelLabel }: { score: number; text: string; tone: Tone; levelLabel: string }) {
   const m = TONE_META[tone];
+  const shown = useCountUp(score);
   return (
     <div className="card overflow-hidden fade-in">
       <div className="flex items-center gap-5 px-6 py-5">
         <div className="flex flex-col items-center shrink-0">
           <span className="text-[44px] leading-none font-bold tabular-nums" style={{ color: m.color }}>
-            {score}
+            {shown}
           </span>
           <span className="text-[10.5px] text-muted mt-1">{levelLabel}</span>
         </div>
