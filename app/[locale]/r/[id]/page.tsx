@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
-import { DatabaseSync } from "node:sqlite";
-import path from "node:path";
 import { dict, LOCALES } from "@/lib/i18n/config";
+import { getDb } from "@/lib/server/db";
 
 // 分享报告只读页:24h 过期
 export default async function SharePage({ params }: { params: Promise<{ locale: string; id: string }> }) {
@@ -10,8 +9,7 @@ export default async function SharePage({ params }: { params: Promise<{ locale: 
   const t = dict(lang);
   let data: any = null;
   try {
-    const db = new DatabaseSync(path.join(process.cwd(), "data", "exitlens.db"));
-    const row = db.prepare("SELECT ts, json FROM shares WHERE id=?").get(id) as any;
+    const row = getDb().prepare("SELECT ts, json FROM shares WHERE id=?").get(id) as any;
     if (row && Date.now() - row.ts < 86_400_000) data = JSON.parse(row.json);
   } catch {}
   if (!data) notFound();
