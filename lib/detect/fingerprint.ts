@@ -428,6 +428,32 @@ export async function collectFingerprint(): Promise<FingerprintResult> {
   const timing = timingPrecision();
   push("timing", timing.fp, 1);
 
+  // 第三批
+  const apis = apiSurface();
+  push("apiSurface", apis.fp, 8);
+  const perms = await permissionStates();
+  push("permissions", perms.fp, perms.fp === "unavailable" ? 0 : 6);
+  const rr = await refreshRate();
+  push("refresh", rr.fp, rr.fp === "unavailable" ? 0 : 3);
+  const topo = displayTopology();
+  push("topology", topo.fp, 2);
+  const tm = textMetricsFp(ctx);
+  push("textMetrics", tm.fp, 4);
+  push("scrollbar", scrollbarWidth(), 2);
+  const me = mathEngine();
+  push("math", me.fp, 3);
+  const wc = await webcodecsProbe();
+  push("webcodecs", wc.fp, 4);
+  push("wasm", `${wasmSimd()}/${typeof SharedArrayBuffer !== "undefined"}`, 3);
+  const sdp = await sdpFingerprint();
+  push("sdp", sdp.fp, 4);
+  const sv = await serverView();
+  if (sv.skewMs !== null) components.push({ key: "clockSkew", value: `${sv.skewMs > 0 ? "+" : ""}${sv.skewMs}ms`, bits: 5 });
+  if (sv.headerOrder) components.push({ key: "headerOrder", value: sv.headerOrder, bits: 6 });
+  const quotaNum = Number(storage.fp);
+  if (Number.isFinite(quotaNum) && quotaNum > 0) components.push({ key: "incognito", value: quotaNum < 300_000_000 ? "reduced" : "normal", bits: 1 });
+  push("privacySet", `${(navigator as any).doNotTrack || "-"}/${(navigator as any).globalPrivacyControl ?? "-"}`, 1);
+
   const input = components.map((c) => `${c.key}=${c.value}`).join("|");
   const hash = (await sha256Hex(input)).slice(0, 32);
   const entropyBits = components.reduce((s, c) => s + c.bits, 0);
@@ -466,7 +492,16 @@ export async function collectFingerprint(): Promise<FingerprintResult> {
       lies.push({ key: "langSpoof", detail: `navigator.language "${navigator.language}" != Intl locale "${intlLocale}"` });
     }
   } catch {}
-  // 7. 计时精度被压低 → 反指纹措施(非伪装,但值得标注)
+  // 7.5 字体双通道不一致
+  const fcCount = fontsCheckChannel();
+  if (fcCount >= 0 && fontCount > 0 && Math.abs(fcCount - fontCount) >= 3) {
+    lies.push({ key: "fontsChannel", detail: `canvas ${fontCount} vs fonts.check ${fcCount}` });
+  }
+  // 7.6 时钟偏移异常(>1h)
+  if (sv.skewMs !== null && Math.abs(sv.skewMs) > 3600_000) {
+    lies.push({ key: "clockSkew", detail: `clock off by ${Math.round(sv.skewMs / 60000)} min` });
+  }
+  // 8. 计时精度被压低 → 反指纹措施(非伪装,但值得标注)
   if (timing.reduced) lies.push({ key: "timingReduced", detail: `performance.now() resolution reduced (${timing.display})` });
 
   return {
@@ -477,4 +512,223 @@ export async function collectFingerprint(): Promise<FingerprintResult> {
     unavailable,
     lies,
   };
+}
+
+// ---- 第三批因子 ----
+
+// API 存在性矩阵(引擎/版本指纹 + bot 检测面)
+function apiSurface(): { fp: string; display: string } {
+  const probes: [string, boolean][] = [
+    ["usb", !!nav_any().usb],
+    ["bt", !!(navigator as any).bluetooth],
+    ["serial", !!(navigator as any).serial],
+    ["hid", !!(navigator as any).hid],
+    ["nfc", typeof (globalThis as any).NDEFReader !== "undefined"],
+    ["xr", !!(navigator as any).xr],
+    ["ink", !!(navigator as any).ink],
+    ["pressure", typeof (globalThis as any).PressureObserver !== "undefined"],
+    ["share", !!(navigator as any).share],
+    ["wake", !!(navigator as any).wakeLock],
+    ["idle", typeof (globalThis as any).IdleDetector !== "undefined"],
+    ["present", !!(navigator as any).presentation],
+    ["screens", typeof (globalThis as any).getScreenDetails === "function"],
+    ["launch", !!(navigator as any).launchQueue],
+    ["vkb", !!(navigator as any).virtualKeyboard],
+    ["posture", !!(navigator as any).devicePosture],
+    ["gpu", !!(navigator as any).gpu],
+    ["coded", typeof (globalThis as any).VideoEncoder !== "undefined"],
+  ];
+  const fp = probes.map(([, ok]) => (ok ? "1" : "0")).join("");
+  return { fp, display: `${probes.filter(([, ok]) => ok).length}/${probes.length}` };
+}
+function nav_any(): any {
+  return navigator as any;
+}
+
+// 权限状态矩阵(用户行为特征)
+async function permissionStates(): Promise<{ fp: string; display: string }> {
+  const names = ["geolocation", "notifications", "camera", "microphone", "clipboard-read", "midi", "persistent-storage", "accelerometer"];
+  const results = await Promise.all(
+    names.map(async (n) => {
+      try {
+        const st = await (navigator as any).permissions.query({ name: n });
+        return st.state === "granted" ? "g" : st.state === "denied" ? "d" : "p";
+      } catch {
+        return "x";
+      }
+    })
+  );
+  return { fp: results.join(""), display: results.filter((r) => r !== "p" && r !== "x").length + " 异常态" };
+}
+
+// 刷新率(rAF 实测)
+async function refreshRate(): Promise<{ fp: string; display: string }> {
+  return new Promise((resolve) => {
+    try {
+      let last = performance.now();
+      const deltas: number[] = [];
+      const tick = (t: number) => {
+        if (deltas.length && t - last > 0) deltas.push(t - last);
+        last = t;
+        if (deltas.length < 24) requestAnimationFrame(tick);
+        else {
+          deltas.sort((a, b) => a - b);
+          const med = deltas[Math.floor(deltas.length / 2)];
+          const hz = Math.round(1000 / med);
+          resolve({ fp: String(hz), display: `${hz}Hz` });
+        }
+      };
+      requestAnimationFrame(tick);
+      setTimeout(() => resolve({ fp: "unavailable", display: "—" }), 2500);
+    } catch {
+      resolve({ fp: "unavailable", display: "—" });
+    }
+  });
+}
+
+// 显示器拓扑
+function displayTopology(): { fp: string; display: string } {
+  const ext = (screen as any).isExtended;
+  const ori = (screen as any).orientation;
+  return { fp: `${ext ? 1 : 0}/${ori?.type || "?"}/${ori?.angle ?? "?"}`, display: `${ext ? "多屏" : "单屏"} ${ori?.type?.split("-")[0] || ""}` };
+}
+
+// TextMetrics 完整字段
+function textMetricsFp(ctx: CanvasRenderingContext2D | null): { fp: string; display: string } {
+  try {
+    if (!ctx) return { fp: "unavailable", display: "—" };
+    ctx.font = '32px "Arial", sans-serif';
+    const m = ctx.measureText("Hxg\u4e2d 018\xb0");
+    const f = (v: unknown) => (typeof v === "number" ? v.toFixed(3) : "?");
+    const fp = `${f(m.width)}|${f((m as any).actualBoundingBoxAscent)}|${f((m as any).actualBoundingBoxDescent)}|${f((m as any).actualBoundingBoxLeft)}|${f((m as any).actualBoundingBoxRight)}|${f((m as any).fontBoundingBoxAscent)}|${f((m as any).fontBoundingBoxDescent)}`;
+    return { fp, display: `${f((m as any).actualBoundingBoxAscent)}/${f((m as any).fontBoundingBoxAscent)}` };
+  } catch {
+    return { fp: "unavailable", display: "—" };
+  }
+}
+
+// 滚动条宽度(DPI/缩放/平台)
+function scrollbarWidth(): string {
+  try {
+    const outer = document.createElement("div");
+    outer.style.cssText = "width:100px;height:100px;overflow:scroll;position:absolute;visibility:hidden";
+    document.body.appendChild(outer);
+    const w = outer.offsetWidth - outer.clientWidth;
+    outer.remove();
+    return String(w);
+  } catch {
+    return "unavailable";
+  }
+}
+
+// Math 引擎指纹
+function mathEngine(): { fp: string; display: string } {
+  try {
+    const vals = [Math.tan(-1e300), Math.sin(1e300), Math.acos(0.123), Math.atanh(0.5), Math.expm1(1), Math.sinh(1)];
+    return { fp: vals.join(","), display: vals[0].toFixed(12) };
+  } catch {
+    return { fp: "unavailable", display: "—" };
+  }
+}
+
+// WebCodecs 硬件编码(GPU 硬解能力)
+async function webcodecsProbe(): Promise<{ fp: string; display: string }> {
+  try {
+    const VE: any = (globalThis as any).VideoEncoder;
+    if (!VE?.isConfigSupported) return { fp: "unavailable", display: "—" };
+    const cfgs: [string, any][] = [
+      ["hevc", { codec: "hev1.1.6.L93.B0", width: 640, height: 360, bitrate: 1_000_000, framerate: 30 }],
+      ["av1", { codec: "av01.0.04M.08", width: 640, height: 360, bitrate: 1_000_000, framerate: 30 }],
+      ["h264", { codec: "avc1.42001E", width: 640, height: 360, bitrate: 1_000_000, framerate: 30 }],
+    ];
+    const out: string[] = [];
+    for (const [name, cfg] of cfgs) {
+      try {
+        const r = await VE.isConfigSupported(cfg);
+        out.push(`${name}:${r.supported ? 1 : 0}`);
+      } catch {
+        out.push(`${name}:x`);
+      }
+    }
+    return { fp: out.join("/"), display: out.map((o) => o.replace(":1", "\u2713").replace(":0", "\u2717").replace(":x", "?")).join(" ") };
+  } catch {
+    return { fp: "unavailable", display: "—" };
+  }
+}
+
+// WASM SIMD(CPU 指令集)
+function wasmSimd(): boolean {
+  try {
+    const bytes = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11]);
+    return WebAssembly.validate(bytes);
+  } catch {
+    return false;
+  }
+}
+
+// SDP 结构(m-line/codec 顺序,DTLS 指纹等随机字段剔除)
+async function sdpFingerprint(): Promise<{ fp: string; display: string }> {
+  return new Promise((resolve) => {
+    try {
+      const pc = new RTCPeerConnection({ iceServers: [] });
+      pc.createDataChannel("x");
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        try {
+          pc.close();
+        } catch {}
+        const sdp = pc.localDescription?.sdp || "";
+        if (!sdp) return resolve({ fp: "unavailable", display: "—" });
+        const stable = sdp
+          .split("\n")
+          .filter((l) => l.startsWith("m=") || l.startsWith("a=rtpmap") || l.startsWith("a=extmap") || l.startsWith("a=fmtp"))
+          .map((l) => l.replace(/[\s]+$/, ""))
+          .join(";")
+          .replace(/urn:3gpp:video/i, "");
+        const codecs = (sdp.match(/a=rtpmap:\d+ (\w+)/g) || []).map((m) => m.split(" ")[1]).slice(0, 6).join(",");
+        resolve({ fp: stable.slice(0, 400), display: codecs || "—" });
+      };
+      const timer = setTimeout(finish, 3000);
+      pc.createOffer()
+        .then((o) => pc.setLocalDescription(o))
+        .catch(() => finish());
+      pc.onicegatheringstatechange = () => {
+        if (pc.iceGatheringState === "complete") finish();
+      };
+    } catch {
+      resolve({ fp: "unavailable", display: "—" });
+    }
+  });
+}
+
+// fonts.check 第二通道(绕过部分 canvas 拦截)
+function fontsCheckChannel(): number {
+  try {
+    if (!document.fonts?.check) return -1;
+    return EXT_FONTS.filter((f) => document.fonts.check(`12px "${f}"`)).length;
+  } catch {
+    return -1;
+  }
+}
+
+// 服务器视角:时钟偏移 + 头序 + 客户端提示头
+async function serverView(): Promise<{ skewMs: number | null; headerOrder: string; hints: string }> {
+  try {
+    const t0 = Date.now();
+    const res = await fetch("/api/me", { cache: "no-store" });
+    const t1 = Date.now();
+    const j = await res.json();
+    const serverMono = typeof j.mono === "number" ? j.mono : null;
+    const skew = serverMono !== null ? Math.round(serverMono - (t0 + t1) / 2) : null;
+    return {
+      skewMs: skew,
+      headerOrder: (j.headerOrder || []).join(","),
+      hints: ["sec-ch-ua", "sec-ch-ua-mobile", "sec-ch-ua-platform"].map((k) => j.headers?.[k] || "-").join("|"),
+    };
+  } catch {
+    return { skewMs: null, headerOrder: "", hints: "" };
+  }
 }
