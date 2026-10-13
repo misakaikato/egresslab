@@ -239,3 +239,50 @@ zh.inference = {
     clean: "滥用/黑名单记录清白", noLies: "无伪装矛盾",
   },
 };
+
+// 推理规则第二批
+Object.assign(zh.inference, {
+  domainSplitGeo: { title: "Anthropic 域名按国分流", sub: "不同域名出口在不同国家——按域名规则分流的多代理组配置" },
+  claudeOnlyExit: { title: "Claude 专用出口", sub: "访问 Anthropic 的流量被单独指定出口,与其余流量不同——固定节点配置" },
+  smartRouting: { title: "按目标智能分流", sub: "不同探测源返回不同 IP——流量按目标地址分流" },
+  relayApac: { title: "中转架构:入口在亚太,出口注册在海外", sub: "流量经亚太节点进入 Cloudflare,出口 IP 属地却在别处——典型中转代理" },
+  coloMismatch: { title: "接入点与出口属地不符", sub: "进入 CF 的位置与 IP 注册国不一致——中转或 anycast 特征" },
+  fastPath: { title: "链路质量异常好", sub: "时区在国内、出口在海外,延迟却极低—— premium 线路(如 CN2 GIA)或真实位置接近出口" },
+  longChain: { title: "疑似多级代理链", sub: "延迟超过 1.2 秒——链路经过多跳转发" },
+  traceBlocked: { title: "trace 被针对性拦截", sub: "域名可达但 cdn-cgi/trace 被过滤——代理或防火墙的过滤规则,连通性结论仅供参考" },
+  apiOnlyChallenge: { title: "API 端点被单独标记", sub: "api.anthropic.com 被挑战而网页正常——API Key 使用场景需换出口" },
+  webrtcOff: { title: "WebRTC 已被禁用", sub: "无任何公网候选——浏览器加固或扩展关闭了 WebRTC,泄漏面已消除" },
+  dohSplit: { title: "DoH 提供商被屏蔽", sub: "加密 DNS 只有部分可达——分流规则未覆盖该域名(直连被阻)" },
+  dnsMitm: { title: "DNS 应答被劫持", sub: "DoH 结果超出正常范围——中间人或透明代理在伪造应答" },
+  cloudExit: { title: "云厂商出口", sub: "ISP/ASN 命中云服务商特征——机房属性确认,注册登录易触发验证" },
+  ptrProxy: { title: "PTR 命名含代理特征", sub: "反向解析域名含 vpn/proxy/tunnel 等关键词" },
+  hijackedHome: { title: "疑似被征用的家宽", sub: "家宽 ASN 却带滥用记录——住宅代理网络的中转节点" },
+  fpRotating: { title: "指纹轮换 + 出口轮换", sub: "指纹与出口同时在变——反检测浏览器 + 代理池组合,账号关联风险高" },
+  fpDrift: { title: "指纹发生漂移", sub: "两次检测指纹不一致——反指纹配置轮换或浏览器更新" },
+  fpStableExitRotate: { title: "指纹固定 + 出口轮换", sub: "同一浏览器换不同出口——账号侧指纹稳定但网络画像多变,风控可据此聚类" },
+  trendUp: { title: "环境评分呈上升趋势", sub: "近期调整生效,环境在变好" },
+  trendDown: { title: "环境评分呈下降趋势", sub: "环境在恶化,对照最近变更排查" },
+  stickyExit: { title: "出口粘性强", sub: "48 小时内出口未变——固定 IP 环境,利于账号稳定" },
+  redial: { title: "同国换 IP(运营商重拨特征)", sub: "IP 变了但国家不变——家宽重拨/移动网络正常行为,非代理池轮换" },
+  mobileEnv: { title: "移动网络环境", sub: "设备与 ASN 均为移动特征——蜂窝出口天然稳定,真人特征强" },
+  headlessFarm: { title: "疑似无头浏览器农场", sub: "熵异常低 + 多因子不可用 + 伪装迹象——自动化批量环境" },
+});
+zh.inference.ev = {
+  ...zh.inference.ev,
+  echo: "回显源", regGeo: "IP 属地", latency: "延迟", claudeOnlyNote: "其余流量走另一出口",
+  coloNote: "colo 为流量实际进入 CF 的位置", fastNote: "国内到欧美直连通常 >150ms",
+  chainNote: "多级转发叠加延迟", fallbackOk: "域名可达(favicon)", traceBlockedNote: "cdn-cgi/trace 请求被拦截",
+  apiChallengeNote: "API 与网页共用 CF 但策略可独立", webrtcNoCandidate: "STUN 全部无公网候选",
+  dohReachable: "可达 DoH", dohNote: "未覆盖域名走直连", outOfRange: "出界应答",
+  dnsMitmNote: "真实 DoH 应答不会超出权威范围", org: "ISP/ASN", cloudNote: "命中云厂商关键词",
+  ptrNote: "PTR 含「{kw}」关键词", hijackNote: "家宽被代理网络征用时常见此组合",
+  fpChanged: "两次检测指纹哈希不同", fpDriftNote: "正常浏览器升级也会改变指纹",
+  fpStable: "指纹哈希稳定", stableRotateNote: "建议指纹与出口同批更换", scores: "近四次评分",
+  sameExit48: "48h 出口", stickyNote: "固定出口是账号养成的加分项", redialNote: "PPPoE 重拨/基站切换",
+  uaMobile: "UA 为移动设备", unavailable: "不可用因子", entropy: "估算熵",
+};
+zh.inference.coherence = {
+  title: "跨层自洽度 {ok}/{n}", subOk: "各层故事一致——风控视角下画像可信", subBad: "存在跨层矛盾,画像有破绽——按证据逐项修复",
+  allOk: "时区/指纹/DNS/出口/colo 各层相互印证",
+  items: { tzGeo: "时区(国内)与 IP 属地矛盾", spoof: "伪装矛盾 {n} 项", dns: "DNS 应答异常", domainSplit: "域名出口不一致", family: "双栈归属国不一致", multiExit: "多出口并存", colo: "接入点与属地不符" },
+};

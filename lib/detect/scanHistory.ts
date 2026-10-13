@@ -9,6 +9,7 @@ export interface ScanRecord {
   headline: string;
   verdicts: string[];
   cnScore?: number;
+  fpHash?: string;
 }
 
 const KEY = "egresslab:scan-history";

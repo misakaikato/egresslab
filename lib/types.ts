@@ -135,4 +135,5 @@ export interface DnsCheckLike {
   status: "ok" | "partial" | "failed";
   polluted: boolean | null;
   outOfRange: string[];
+  providers?: string[];
 }

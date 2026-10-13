@@ -5,6 +5,8 @@ import type { EnvScanResult } from "./detect/environment";
 import type { EchoResult, HistoryVerdict } from "./detect/direct";
 import type { StackInfo } from "./detect/dualstack";
 import type { FingerprintResult } from "./detect/fingerprint";
+import { coloToCountry } from "./colos";
+import type { ScanRecord } from "./detect/scanHistory";
 
 export interface Conclusion {
   id: string;
@@ -25,10 +27,14 @@ export interface InferenceInput {
   dns: DnsCheckLike | null;
   fp: FingerprintResult | null;
   history: HistoryVerdict | null;
+  scans: ScanRecord[];
   claudeReachable: boolean | undefined;
 }
 
 const CN_TZ = ["Asia/Shanghai", "Asia/Urumqi", "Asia/Chongqing", "PRC"];
+const CLOUD_RE = /amazon|aws|digitalocean|google cloud|gcp|\bazure\b|microsoft|vultr|linode|akamai|\bovh\b|hetzner|contabo|scaleway|oracle|alibaba|tencent|huawei cloud|bandwagon|hostwinds/i;
+const PTR_PROXY_KEYWORDS = /vpn|proxy|relay|mullvad|nordvpn|surfshark|expressvpn|windscribe|tunnel|wg-|wireguard|shadowsocks|trojan|\bss\b|hysteria/i;
+const APAC_COLOS = new Set(["HKG", "NRT", "KIX", "SIN", "ICN", "TPE", "SJC", "LAX", "SEA", "SYD"]);
 
 export function inferConclusions(input: InferenceInput, t: any): Conclusion[] {
   const out: Conclusion[] = [];
@@ -128,6 +134,142 @@ export function inferConclusions(input: InferenceInput, t: any): Conclusion[] {
   if (sw7 >= 3) {
     out.push({ id: "rotation", tone: "bad", confidence: "high", title: I.rotation.title, subtitle: I.rotation.sub, evidence: [I.ev.sw7.replace("{n}", String(sw7)), `${I.ev.trail}: ${(input.history?.trail || []).join(" → ") || "—"}`] });
   }
+
+  // ── R13-R16: 路径几何(colo/延迟/分流拓扑) ──
+  const echoIps = Array.from(new Set(input.directExits.map((e) => e.ip)));
+  const echoCountries = input.directExits.map((e) => e.ip);
+  const claudeInEcho = !!claude?.ip && echoIps.includes(claude.ip);
+  const probesWithIp = input.probes.filter((p) => p.ip);
+  const exitCountries = Array.from(new Set(probesWithIp.map((p) => p.country).filter(Boolean)));
+  const exitIps = Array.from(new Set(probesWithIp.map((p) => p.ip)));
+  if (exitIps.length >= 2 && exitCountries.length >= 2) {
+    out.push({ id: "domainSplitGeo", tone: "bad", confidence: "high", title: I.domainSplitGeo.title, subtitle: I.domainSplitGeo.sub, evidence: probesWithIp.map((p) => `${p.host}: ${p.ip} (${p.country})`) });
+  }
+  if (!claudeInEcho && echoIps.length === 1 && claude?.ip) {
+    out.push({ id: "claudeOnlyExit", tone: "neutral", confidence: "high", title: I.claudeOnlyExit.title, subtitle: I.claudeOnlyExit.sub, evidence: [`${I.ev.claudeExit}: ${claude.ip}`, `${I.ev.echo}: ${echoIps[0]}`, I.ev.claudeOnlyNote] });
+  }
+  if (echoIps.length >= 2 && !claudeInEcho) {
+    out.push({ id: "smartRouting", tone: "warn", confidence: "medium", title: I.smartRouting.title, subtitle: I.smartRouting.sub, evidence: input.directExits.map((e) => `${e.via}: ${e.ip}`) });
+  }
+  const coloCountry = claude?.colo ? coloToCountry(claude.colo) : null;
+  const ipCountry = claudeCountry || (input.intel?.geo?.country_code as string) || "";
+  if (coloCountry && ipCountry && coloCountry !== ipCountry) {
+    const apac = APAC_COLOS.has(claude!.colo!);
+    out.push({
+      id: "coloMismatch", tone: apac && tzCN ? "warn" : "neutral", confidence: apac && tzCN ? "high" : "medium",
+      title: tzCN && apac ? I.relayApac.title : I.coloMismatch.title,
+      subtitle: tzCN && apac ? I.relayApac.sub : I.coloMismatch.sub,
+      evidence: [`${I.ev.colo}: ${claude!.colo} (${coloCountry})`, `${I.ev.regGeo}: ${ipCountry}`, I.ev.coloNote],
+    });
+  }
+  if (tzCN && claudeCountry && claudeCountry !== "CN" && claude && claude.ms > 0 && claude.ms < 90) {
+    out.push({ id: "fastPath", tone: "neutral", confidence: "medium", title: I.fastPath.title, subtitle: I.fastPath.sub, evidence: [`${I.ev.latency}: ${claude.ms}ms`, `${I.ev.claudeExit}: ${claude.ip} (${claudeCountry})`, I.ev.fastNote] });
+  }
+  if (claude && claude.ms > 1200 && claude.status === "ok") {
+    out.push({ id: "longChain", tone: "warn", confidence: "medium", title: I.longChain.title, subtitle: I.longChain.sub, evidence: [`${I.ev.latency}: ${claude.ms}ms`, I.ev.chainNote] });
+  }
+  if (claude && claude.status === "ok" && claude.fallback && claude.ip === "") {
+    out.push({ id: "traceBlocked", tone: "warn", confidence: "medium", title: I.traceBlocked.title, subtitle: I.traceBlocked.sub, evidence: [I.ev.fallbackOk, I.ev.traceBlockedNote] });
+  }
+  const apiProbe = input.probes.find((p) => p.host === "api.anthropic.com");
+  if (apiProbe?.challenged && !claude?.challenged) {
+    out.push({ id: "apiOnlyChallenge", tone: "bad", confidence: "high", title: I.apiOnlyChallenge.title, subtitle: I.apiOnlyChallenge.sub, evidence: ["api.anthropic.com: 403", "claude.ai: OK", I.ev.apiChallengeNote] });
+  }
+
+  // ── R17-R19: WebRTC / DNS ──
+  if ((input.webrtc.status === "timeout" || input.webrtc.status === "unsupported") && input.webrtc.publicIps.length === 0) {
+    out.push({ id: "webrtcOff", tone: "good", confidence: "medium", title: I.webrtcOff.title, subtitle: I.webrtcOff.sub, evidence: [I.ev.webrtcNoCandidate] });
+  }
+  const dnsProviders = input.dns?.providers || [];
+  if (input.dns?.status === "partial") {
+    out.push({ id: "dohSplit", tone: "warn", confidence: "medium", title: I.dohSplit.title, subtitle: I.dohSplit.sub, evidence: [`${I.ev.dohReachable}: ${dnsProviders.join(", ")}`, I.ev.dohNote] });
+  }
+  if (input.dns?.polluted === true) {
+    out.push({ id: "dnsMitm", tone: "bad", confidence: "high", title: I.dnsMitm.title, subtitle: I.dnsMitm.sub, evidence: [`${I.ev.outOfRange}: ${(input.dns.outOfRange || []).slice(0, 2).join("; ")}`, I.ev.dnsMitmNote] });
+  }
+
+  // ── R20-R22: ISP/PTR/家宽征用 ──
+  const orgBlob = `${network.isp || ""} ${network.asn_name || ""}`.toLowerCase();
+  if (CLOUD_RE.test(orgBlob)) {
+    out.push({ id: "cloudExit", tone: "warn", confidence: "high", title: I.cloudExit.title, subtitle: I.cloudExit.sub, evidence: [`${I.ev.org}: ${network.isp || network.asn_name}`, I.ev.cloudNote] });
+  }
+  const ptrHost = (network as any).ptr?.host || "";
+  if (ptrHost && PTR_PROXY_KEYWORDS.test(ptrHost)) {
+    const kw = PTR_PROXY_KEYWORDS.exec(ptrHost)?.[0];
+    out.push({ id: "ptrProxy", tone: "warn", confidence: "medium", title: I.ptrProxy.title, subtitle: I.ptrProxy.sub, evidence: [`PTR: ${ptrHost}`, I.ev.ptrNote.replace("{kw}", kw || "proxy")] });
+  }
+  if ((network.asn_type === "residential" || network.asn_type === "mobile") && ((risk.abuse_score ?? 0) >= 30 || (risk.blacklist_score ?? 0) >= 50)) {
+    out.push({ id: "hijackedHome", tone: "bad", confidence: "medium", title: I.hijackedHome.title, subtitle: I.hijackedHome.sub, evidence: [I.ev.residential, `abuse ${risk.abuse_score}/blacklist ${risk.blacklist_score}`, I.ev.hijackNote] });
+  }
+
+  // ── R23-R27: 历史时序与指纹稳定性 ──
+  const scans = input.scans || [];
+  const withFp = scans.filter((sc) => sc.fpHash);
+  if (withFp.length >= 2) {
+    const stable = withFp[withFp.length - 1].fpHash === withFp[withFp.length - 2].fpHash;
+    const exitsRotate = (input.history?.switches7d ?? 0) >= 2;
+    if (!stable && exitsRotate) {
+      out.push({ id: "fpRotating", tone: "bad", confidence: "high", title: I.fpRotating.title, subtitle: I.fpRotating.sub, evidence: [I.ev.fpChanged, `${I.ev.sw7.replace("{n}", String(input.history?.switches7d ?? 0))}`, I.ev.fpRotateNote] });
+    } else if (!stable) {
+      out.push({ id: "fpDrift", tone: "warn", confidence: "medium", title: I.fpDrift.title, subtitle: I.fpDrift.sub, evidence: [I.ev.fpChanged, I.ev.fpDriftNote] });
+    } else if (exitsRotate && stable) {
+      out.push({ id: "fpStableExitRotate", tone: "warn", confidence: "medium", title: I.fpStableExitRotate.title, subtitle: I.fpStableExitRotate.sub, evidence: [I.ev.fpStable, `${I.ev.sw7.replace("{n}", String(input.history?.switches7d ?? 0))}`, I.ev.stableRotateNote] });
+    }
+  }
+  if (scans.length >= 4) {
+    const last4 = scans.slice(-4).map((x) => x.score);
+    const rising = last4[3] > last4[0] + 10;
+    const falling = last4[3] < last4[0] - 10;
+    if (rising || falling) {
+      out.push({ id: "trend", tone: rising ? "good" : "bad", confidence: "medium", title: rising ? I.trendUp.title : I.trendDown.title, subtitle: rising ? I.trendUp.sub : I.trendDown.sub, evidence: [`${I.ev.scores}: ${last4.join(" → ")}`] });
+    }
+  }
+  const hist = input.history?.entries || [];
+  if (hist.length >= 3) {
+    const span48h = hist.filter((h) => Date.now() - h.ts <= 48 * 3600_000);
+    const ips48 = new Set(span48h.map((h) => h.ip));
+    if (ips48.size === 1 && span48h.length >= 3) {
+      out.push({ id: "stickyExit", tone: "good", confidence: "medium", title: I.stickyExit.title, subtitle: I.stickyExit.sub, evidence: [`${I.ev.sameExit48}: ${span48h[0].ip}`, I.ev.stickyNote] });
+    }
+  }
+  if (hist.length >= 2) {
+    const a = hist[hist.length - 2], b = hist[hist.length - 1];
+    if (a.ip !== b.ip && a.country === b.country) {
+      out.push({ id: "redial", tone: "neutral", confidence: "medium", title: I.redial.title, subtitle: I.redial.sub, evidence: [`${a.ip} → ${b.ip} (${b.country})`, I.ev.redialNote] });
+    }
+  }
+
+  // ── R28-R29: 设备画像 ──
+  const touch = (input.fp?.components.find((c) => c.key === "hardware")?.value || "").includes("t") ? null : null; // 占位:触摸信息在 env/UA
+  const uaMobile = typeof navigator !== "undefined" && /android|iphone|ipad|mobile/i.test(navigator.userAgent);
+  if (uaMobile && (network.asn_type === "mobile" || /mobile|cellular|wireless/i.test(orgBlob))) {
+    out.push({ id: "mobileEnv", tone: "good", confidence: "medium", title: I.mobileEnv.title, subtitle: I.mobileEnv.sub, evidence: [I.ev.uaMobile, `${I.ev.org}: ${network.isp || network.asn_name}`] });
+  }
+  void touch;
+  const entropy = input.fp?.entropyBits ?? 0;
+  const autoSigns = (input.fp?.lies.filter((l) => ["platformFonts", "webglMismatch"].includes(l.key)).length ?? 0) + (input.fp?.unavailable.length ?? 0);
+  if (entropy > 0 && entropy < 25 && autoSigns >= 3) {
+    out.push({ id: "headlessFarm", tone: "bad", confidence: "medium", title: I.headlessFarm.title, subtitle: I.headlessFarm.sub, evidence: [`${I.ev.entropy}: ${entropy}b`, `${I.ev.unavailable}: ${(input.fp?.unavailable || []).join(", ")}`] });
+  }
+
+  // ── R30: 跨层自洽度(元结论) ──
+  const contradictions: string[] = [];
+  if (tzCN && ipCountry && ipCountry !== "CN" && !cnEchoSameAsClaude) contradictions.push(I.coherence.items.tzGeo);
+  if (spoofLies > 0) contradictions.push(I.coherence.items.spoof.replace("{n}", String(spoofLies)));
+  if (input.dns?.polluted) contradictions.push(I.coherence.items.dns);
+  if (exitIps.length >= 2) contradictions.push(I.coherence.items.domainSplit);
+  if (v4c && v6c && v4c !== v6c) contradictions.push(I.coherence.items.family);
+  if (echoIps.length >= 2) contradictions.push(I.coherence.items.multiExit);
+  if (coloCountry && ipCountry && coloCountry !== ipCountry) contradictions.push(I.coherence.items.colo);
+  const layers = 7;
+  const ok = layers - contradictions.length;
+  out.push({
+    id: "coherence", tone: contradictions.length === 0 ? "good" : contradictions.length <= 2 ? "warn" : "bad",
+    confidence: contradictions.length === 0 ? "high" : "medium",
+    title: I.coherence.title.replace("{ok}", String(ok)).replace("{n}", String(layers)),
+    subtitle: contradictions.length === 0 ? I.coherence.subOk : I.coherence.subBad,
+    evidence: contradictions.length ? contradictions : [I.coherence.allOk],
+  });
 
   // ── R12: 最优家宽环境 ──
   if (network.asn_type === "residential" || network.asn_type === "mobile") {

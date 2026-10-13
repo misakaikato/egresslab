@@ -172,11 +172,11 @@ export default function Detector({ locale }: { locale: string }) {
     () =>
       phase === "done"
         ? inferConclusions(
-            { probes, directExits: direct.exits, dual, webrtc, intel, env, dns: dnsCheck, fp, history, claudeReachable: probes.length ? claude?.status !== "failed" : undefined },
+            { probes, directExits: direct.exits, dual, webrtc, intel, env, dns: dnsCheck, fp, history, scans, claudeReachable: probes.length ? claude?.status !== "failed" : undefined },
             t
           )
         : [],
-    [phase, probes, direct, dual, webrtc, intel, env, dnsCheck, fp, history, claude, t]
+    [phase, probes, direct, dual, webrtc, intel, env, dnsCheck, fp, history, scans, claude, t]
   );
   const savedAt = useRef(0);
   useEffect(() => {
@@ -193,6 +193,7 @@ export default function Detector({ locale }: { locale: string }) {
       headline: head.text,
       verdicts: vCards.map((c) => c.title),
       cnScore: env?.score,
+      fpHash: fp?.hash,
     };
     setScans(saveScan(rec));
   }, [phase, score, head, vCards]);
