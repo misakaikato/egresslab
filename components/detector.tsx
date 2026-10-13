@@ -274,7 +274,7 @@ export default function Detector({ locale }: { locale: string }) {
                 onClick={() => setStatusOpen(!statusOpen)}
                 style={status.indicator !== "none" && status.indicator !== "unknown" ? { borderColor: "var(--warn)", color: "var(--warn)" } : undefined}
               >
-                {(t.statusLevels && t.statusLevels[status.indicator]) || status.indicator}
+                {t.hero.officialStatus}: {(t.statusLevels && t.statusLevels[status.indicator]) || status.indicator}
                 <ChevronDown size={12} className={`transition-transform ${statusOpen ? "rotate-180" : ""}`} />
               </button>
               {statusOpen ? (
