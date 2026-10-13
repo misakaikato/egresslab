@@ -1,0 +1,10 @@
+node_modules/
+.next/
+data/db/
+data/*.db
+data/lists/
+.env
+.env.local
+*.tsbuildinfo
+.DS_Store
+data/egresslab.db*

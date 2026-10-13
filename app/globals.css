@@ -1,0 +1,107 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f6f4f0;
+  --surface: #fffefb;
+  --ink: #26221d;
+  --soft: #4f4a42;
+  --muted: #8a8378;
+  --line: #e5dfd5;
+  --accent: #bc5527;
+  --accent-soft: #f5e2d7;
+  --good: #3e7c4f;
+  --warn: #a8761d;
+  --bad: #b23c2e;
+}
+
+.dark {
+  --bg: #16130f;
+  --surface: #1e1a15;
+  --ink: #ece5da;
+  --soft: #c4bbae;
+  --muted: #8b8172;
+  --line: #2e2820;
+  --accent: #d97757;
+  --accent-soft: #3a261c;
+  --good: #6cae7e;
+  --warn: #d3a04c;
+  --bad: #e06a5a;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-feature-settings: "tnum";
+  transition: background-color 0.2s, color 0.2s;
+}
+
+::selection {
+  background: var(--accent-soft);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 1.1rem;
+}
+
+.card-hover {
+  transition: border-color 0.15s;
+}
+.card-hover:hover {
+  border-color: var(--accent);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  padding: 0.15rem 0.65rem;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--soft);
+  background: var(--surface);
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.dial-anim {
+  transition: stroke-dashoffset 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bar-anim {
+  transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fade-in {
+  animation: fade-in 0.35s ease-out both;
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

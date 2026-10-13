@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- EgressLab: 带缺口的边界 + 从缺口出去的信号 -->
+  <path d="M52 20 V26 M52 38 V44 A8 8 0 0 1 44 52 H20 A8 8 0 0 1 12 44 V20 A8 8 0 0 1 20 12 H44 A8 8 0 0 1 52 20"
+        stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="23" cy="32" r="4.5" fill="#C4552D"/>
+  <path d="M30 32 H50" stroke="#C4552D" stroke-width="5" stroke-linecap="round"/>
+  <path d="M44 24.5 L55 32 L44 39.5" stroke="#C4552D" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
