@@ -3,16 +3,24 @@ import { DatabaseSync } from "node:sqlite";
 import { mkdirSync, existsSync } from "node:fs";
 import path from "node:path";
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const DB_PATH = existsSync(path.join(DATA_DIR, "exitlens.db"))
-  ? path.join(DATA_DIR, "exitlens.db")
-  : path.join(DATA_DIR, "egresslab.db"); // 旧文件名兼容,避免升级丢数据
+let DATA_DIR = path.join(process.cwd(), "data");
+let DB_PATH = path.join(DATA_DIR, "exitlens.db");
 
 let db: DatabaseSync | null = null;
 
 export function getDb(): DatabaseSync {
   if (db) return db;
-  mkdirSync(DATA_DIR, { recursive: true });
+  // 无服务器环境(Vercel 等):工作目录不可写 → 回退 /tmp(数据不跨实例持久,功能降级但可用)
+  try {
+    mkdirSync(DATA_DIR, { recursive: true });
+  } catch {
+    DATA_DIR = path.join("/tmp", "exitlens-data");
+    DB_PATH = path.join(DATA_DIR, "exitlens.db");
+    mkdirSync(DATA_DIR, { recursive: true });
+  }
+  if (!existsSync(DB_PATH) && existsSync(path.join(DATA_DIR, "egresslab.db"))) {
+    DB_PATH = path.join(DATA_DIR, "egresslab.db"); // 旧文件名兼容
+  }
   db = new DatabaseSync(DB_PATH);
   db.exec(`
     PRAGMA journal_mode = WAL;
