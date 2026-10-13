@@ -382,3 +382,14 @@ Object.assign(ja.inference, {
   dnsLeakCn: { title: "DNS が国内再帰(真の漏洩)", sub: "出口は海外なのにリゾルバが国内から——DNS がプロキシ外で実位置を露出" },
   dnsLeakForeign: { title: "DNS 再帰と出口国が不一致", sub: "解決経路と出口不一致——DNS 分流か漏洩" },
 });
+
+
+ja.netTypes = { isp: "住宅接入", mobile: "モバイル", hosting: "ホスティング/DC", transit: "バックボーン中継", cdn: "CDN/コンテンツ", business: "法人回線", education: "教育網", government: "政府網", unknown: "不明" };
+ja.pdbTypes = { NSP: "ネットワーク事業者(中継)", ISP: "アクセス ISP", Content: "コンテンツ", "Cable/MSO": "ケーブル", Enterprise: "企業", "Educational/Research": "教育研究", "Non-Profit": "非営利", "Network Facility": "施設" };
+ja.kycMap = { not_required: "不要", created: "開始", verified: "承認済", denied: "拒否", failed: "失敗", expired: "期限切れ", pending: "待機", unknown: "不明" };
+ja.trialMap = { eligible: "対象", ineligible: "非対象", active: "進行中", active_trial: "トライアル中" };
+ja.billingMap = { individual_consumption_v2: "個人", claude_pro: "Pro", consumer: "コンシューマ", team: "チーム", enterprise: "エンタープライズ" };
+
+ja.account.kycMap = ja.kycMap;
+ja.account.trialMap = ja.trialMap;
+ja.account.billingMap = ja.billingMap;

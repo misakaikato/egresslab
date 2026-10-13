@@ -269,6 +269,7 @@ Object.assign(zh.inference, {
 });
 zh.inference.ev = {
   ...zh.inference.ev,
+  resolver: "解析器",
   echo: "回显源", regGeo: "IP 属地", latency: "延迟", claudeOnlyNote: "其余流量走另一出口",
   coloNote: "colo 为流量实际进入 CF 的位置", fastNote: "国内到欧美直连通常 >150ms",
   chainNote: "多级转发叠加延迟", fallbackOk: "域名可达(favicon)", traceBlockedNote: "cdn-cgi/trace 请求被拦截",
@@ -387,3 +388,14 @@ Object.assign(zh.inference, {
   dnsLeakCn: { title: "DNS 走国内递归(真泄漏)", sub: "出口在海外但解析器从国内来查——DNS 未随代理,暴露真实网络位置" },
   dnsLeakForeign: { title: "DNS 递归与出口不同国", sub: "解析路径与流量出口不一致——存在 DNS 分流或泄漏" },
 });
+
+
+zh.netTypes = { isp: "家宽接入商", mobile: "移动网络", hosting: "托管机房", transit: "骨干转接", cdn: "CDN/内容商", business: "商企专线", education: "教育网", government: "政府网络", unknown: "未知" };
+zh.pdbTypes = { NSP: "网络服务商(转接)", ISP: "接入商", Content: "内容商", "Cable/MSO": "有线电视", Enterprise: "企业", "Educational/Research": "教育科研", "Non-Profit": "非营利", "Network Facility": "网络设施" };
+zh.kycMap = { not_required: "无需核验", created: "已发起", verified: "已通过", denied: "已拒绝", failed: "失败", expired: "已过期", pending: "待核验", unknown: "未知" };
+zh.trialMap = { eligible: "有资格", ineligible: "无资格", active: "进行中", active_trial: "试用中" };
+zh.billingMap = { individual_consumption_v2: "个人订阅", claude_pro: "Pro 版", consumer: "消费版", team: "团队版", enterprise: "企业版" };
+
+zh.account.kycMap = zh.kycMap;
+zh.account.trialMap = zh.trialMap;
+zh.account.billingMap = zh.billingMap;

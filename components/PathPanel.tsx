@@ -67,7 +67,17 @@ export default function PathPanel({
         value={exits && distinct.length ? (distinct.length > 1 ? `${distinct.length} ${t.exitsCount}` : distinct[0] === claude?.ip ? t.same : t.diff) : t.pending}
         tone={exits && distinct.length ? (distinct.length > 1 ? "bad" : distinct[0] === claude?.ip ? "good" : "bad") : "muted"}
       />
-      <Row label={t.netClass || "Net"} value={`${intel?.network?.asn_type || "?"}${intel?.network?.pdb_type ? ` (${intel.network.pdb_type})` : ""}`} tone={["residential", "mobile", "isp"].includes(String(intel?.network?.asn_type)) ? "good" : ["hosting", "transit", "cdn"].includes(String(intel?.network?.asn_type)) ? "bad" : undefined} />
+      <Row
+        label={t.netClass || "Net"}
+        value={(() => {
+          const nt = String(intel?.network?.asn_type || "?");
+          const pdb = String(intel?.network?.pdb_type || "").replace(/\?$/, "");
+          const ntZh = (t.netTypes && t.netTypes[nt]) || nt;
+          const pdbZh = pdb ? (t.pdbTypes && t.pdbTypes[pdb]) || pdb : "";
+          return pdb ? `${ntZh}(${pdbZh})` : ntZh;
+        })()}
+        tone={["residential", "mobile", "isp"].includes(String(intel?.network?.asn_type)) ? "good" : ["hosting", "transit", "cdn"].includes(String(intel?.network?.asn_type)) ? "bad" : undefined}
+      />
       <Row label={t.native} value={intel?.network?.native === true ? t.nativeYes : intel?.network?.native === false ? t.nativeNo : t.pending} tone={intel?.network?.native === true ? "good" : intel?.network?.native === false ? "bad" : "muted"} />
       <Row label={t.timezone} value={browserTz ? `${browserTz} / ${intel?.geo?.timezone || "?"}` : t.pending} />
       {all.length >= 2 ? <Row label="Σ" value={sameAll ? t.same : t.diff} tone={sameAll ? "good" : "bad"} /> : null}

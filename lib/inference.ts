@@ -322,7 +322,7 @@ export function inferConclusions(input: InferenceInput, t: any): Conclusion[] {
       title: cnResolver ? I.dnsLeakCn.title : I.dnsLeakForeign.title,
       subtitle: cnResolver ? I.dnsLeakCn.sub : I.dnsLeakForeign.sub,
       evidence: [
-        ...input.dnsLeak.resolvers.slice(0, 3).map((r) => `resolver ${r.ip} (${r.country || "?"})`),
+        ...input.dnsLeak.resolvers.slice(0, 3).map((r) => `${I.ev.resolver} ${r.ip} (${r.country || "?"})`),
         `${I.ev.claudeExit}: ${input.dnsLeak.exitCountry || "?"}`,
       ],
     });

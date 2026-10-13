@@ -382,3 +382,14 @@ Object.assign(en.inference, {
   dnsLeakCn: { title: "DNS uses CN recursors (real leak)", sub: "Exit abroad but resolvers query from CN — DNS bypasses the proxy, exposing real location" },
   dnsLeakForeign: { title: "DNS recursors differ from exit country", sub: "Resolution path inconsistent with traffic exit — DNS split or leak" },
 });
+
+
+en.netTypes = { isp: "residential ISP", mobile: "mobile carrier", hosting: "hosting/DC", transit: "backbone transit", cdn: "CDN/content", business: "business line", education: "education", government: "government", unknown: "unknown" };
+en.pdbTypes = { NSP: "network service provider", ISP: "access ISP", Content: "content", "Cable/MSO": "cable/MSO", Enterprise: "enterprise", "Educational/Research": "education/research", "Non-Profit": "non-profit", "Network Facility": "facility" };
+en.kycMap = { not_required: "not required", created: "initiated", verified: "verified", denied: "denied", failed: "failed", expired: "expired", pending: "pending", unknown: "unknown" };
+en.trialMap = { eligible: "eligible", ineligible: "ineligible", active: "active", active_trial: "in trial" };
+en.billingMap = { individual_consumption_v2: "individual", claude_pro: "Pro", consumer: "consumer", team: "team", enterprise: "enterprise" };
+
+en.account.kycMap = en.kycMap;
+en.account.trialMap = en.trialMap;
+en.account.billingMap = en.billingMap;

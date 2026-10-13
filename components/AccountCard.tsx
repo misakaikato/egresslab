@@ -222,9 +222,9 @@ export default function AccountCard({ t }: { t: any }) {
             <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[12px]">
               {scan.emailMasked ? <span className="text-muted">{t.login.email}: <code className="mono text-[11px]">{scan.emailMasked}</code></span> : null}
               {scan.displayName ? <span className="text-muted">{t.login.displayName}: <b className="text-ink">{String(scan.displayName).slice(0, 20)}</b></span> : null}
-              <span className="text-muted">{t.login.org}: <b className="text-ink">{scan.orgCount ?? "—"}</b>{scan.orgName ? ` (${scan.orgName})` : ""}{scan.billing ? ` · ${scan.billing}` : ""}</span>
-              <span className="text-muted">{t.login.kyc}: <b className="text-ink" style={{ color: scan.kyc === "not_required" ? "var(--good)" : scan.kyc === "denied" ? "var(--bad)" : undefined }}>{scan.kyc || "—"}</b></span>
-              {scan.trial ? <span className="text-muted">{t.login.trial}: <b className="text-ink">{scan.trial}</b></span> : null}
+              <span className="text-muted">{t.login.org}: <b className="text-ink">{scan.orgCount ?? "—"}</b>{scan.orgName ? ` (${scan.orgName})` : ""}{scan.billing ? ` · ${(t.billingMap && t.billingMap[scan.billing]) || scan.billing}` : ""}</span>
+              <span className="text-muted">{t.login.kyc}: <b className="text-ink" style={{ color: scan.kyc === "not_required" ? "var(--good)" : scan.kyc === "denied" ? "var(--bad)" : undefined }}>{(t.kycMap && t.kycMap[scan.kyc || ""]) || scan.kyc || "—"}</b></span>
+              {scan.trial ? <span className="text-muted">{t.login.trial}: <b className="text-ink">{(t.trialMap && t.trialMap[scan.trial]) || scan.trial}</b></span> : null}
               {scan.gatesTotal !== undefined ? <span className="text-muted">{t.login.gates}: <b className="text-ink">{scan.gatesTrue}/{scan.gatesTotal}</b></span> : null}
               <span className="text-muted">{t.login.device}: <code className="mono text-[11px]">{scan.deviceId || "—"}</code></span>
               {scan.anonId ? <span className="text-muted">{t.login.anonId}: <code className="mono text-[11px]">{scan.anonId}</code></span> : null}
