@@ -29,6 +29,7 @@ export interface InferenceInput {
   history: HistoryVerdict | null;
   scans: ScanRecord[];
   claudeReachable: boolean | undefined;
+  score?: import("./types").ScoreResult;
 }
 
 const CN_TZ = ["Asia/Shanghai", "Asia/Urumqi", "Asia/Chongqing", "PRC"];
@@ -270,6 +271,45 @@ export function inferConclusions(input: InferenceInput, t: any): Conclusion[] {
     subtitle: contradictions.length === 0 ? I.coherence.subOk : I.coherence.subBad,
     evidence: contradictions.length ? contradictions : [I.coherence.allOk],
   });
+
+  // ── R31-R39: 第四批规则 ──
+  const score = input.score;
+  const langs = (input.env?.detail?.languages || "").toLowerCase();
+  const noZhLang = langs && !langs.split(",").some((l) => l.trim().startsWith("zh"));
+  if (tzCN && noZhLang) {
+    out.push({ id: "patchworkEnv", tone: "warn", confidence: "medium", title: I.patchworkEnv.title, subtitle: I.patchworkEnv.sub, evidence: [`${I.ev.tz}: ${tz}`, `${I.ev.lang}: ${langs.split(",")[0]}`, I.ev.patchNote] });
+  }
+  const repCheckCount = (input.intel as any)?._repCount;
+  if ((network.native === true || ipCountry) && (risk.neighbors_flagged ?? 0) === 0 && !pfFresh && (risk.abuse_score ?? 0) < 5 && (risk.blacklist_score ?? 0) < 5 && (network.asn_type === "residential" || network.asn_type === "mobile" || risk.is_datacenter)) {
+    out.push({ id: (network.asn_type === "residential" || network.asn_type === "mobile") ? "lowShare" : "selfHostedRelay", tone: "good", confidence: "medium", title: (network.asn_type === "residential" || network.asn_type === "mobile") ? I.lowShare.title : I.selfHosted.title, subtitle: (network.asn_type === "residential" || network.asn_type === "mobile") ? I.lowShare.sub : I.selfHosted.sub, evidence: [I.ev.neighbors0, I.ev.clean, network.native === true ? I.ev.native : I.ev.oldPrefix] });
+  }
+  if (claude?.challenged && (risk.blacklist_score ?? 0) < 5 && (risk.abuse_score ?? 0) < 5) {
+    out.push({ id: "asnCollateral", tone: "warn", confidence: "medium", title: I.asnCollateral.title, subtitle: I.asnCollateral.sub, evidence: [I.ev.clean, "cdn-cgi/trace 403", I.ev.asnCollateralNote] });
+  }
+  if (score) {
+    const expo = score.dimensions.find((d) => d.id === "exposure");
+    if (expo?.code === "leakVsClaude" && (risk.is_vpn || risk.is_proxy)) {
+      out.push({ id: "webrtcProxyGap", tone: "bad", confidence: "high", title: I.webrtcProxyGap.title, subtitle: I.webrtcProxyGap.sub, evidence: [I.ev.webrtcLeak, I.ev.proxyOn, I.ev.webrtcFix] });
+    }
+  }
+  const incognito = input.fp?.components.find((c) => c.key === "incognito")?.value;
+  if (incognito === "reduced") {
+    out.push({ id: "incognitoMyth", tone: "neutral", confidence: "high", title: I.incognitoMyth.title, subtitle: I.incognitoMyth.sub, evidence: [I.ev.incognitoNote] });
+  }
+  if (input.dns?.status === "failed" && claude?.status === "ok") {
+    out.push({ id: "dohAllFail", tone: "neutral", confidence: "medium", title: I.dohAllFail.title, subtitle: I.dohAllFail.sub, evidence: ["DoH: dns.google + cloudflare-dns.com 均失败", `${I.ev.claudeExit}: OK`, I.ev.dohAllNote] });
+  }
+  const fontsComp = input.fp?.components.find((c) => c.key === "fonts")?.value || "";
+  const fontsN = Number(fontsComp.split("/")[0]);
+  if (fontsN > 0 && fontsN < 16) {
+    out.push({ id: "sparseFonts", tone: "neutral", confidence: "low", title: I.sparseFonts.title, subtitle: I.sparseFonts.sub, evidence: [`${I.ev.fontsCount}: ${fontsComp}`, I.ev.sparseNote] });
+  }
+  if (score) {
+    const badConds = score.gate === "unsupported" || score.gate === "challenged" || (risk.is_datacenter && (input.env?.score ?? 0) >= 31);
+    const goodConds = !score.gate && score.score >= 80 && (network.asn_type === "residential" || network.asn_type === "mobile");
+    if (badConds) out.push({ id: "registerNo", tone: "bad", confidence: "high", title: I.registerNo.title, subtitle: I.registerNo.sub, evidence: [score.gate ? I.ev.gateOn : I.ev.dcEnv, `${I.ev.cnScore}: ${input.env?.score ?? "—"}`] });
+    else if (goodConds) out.push({ id: "registerOk", tone: "good", confidence: "high", title: I.registerOk.title, subtitle: I.registerOk.sub, evidence: [`${I.ev.score}: ${score.score}`, I.ev.residential, I.ev.noLies] });
+  }
 
   // ── R12: 最优家宽环境 ──
   if (network.asn_type === "residential" || network.asn_type === "mobile") {

@@ -318,3 +318,60 @@ en.account.login.statuses = "Endpoint statuses";
 en.account.login.steps = "Open claude.ai → F12 → Console → paste & run → output copied → paste back here. Metadata only: org/account/KYC/trial/trusted devices/member & conversation counts/banners/device ID. Email masked; no conversation content is read.";
 
 en.testingDone = "Scan complete";
+
+Object.assign(en.inference, {
+  patchworkEnv: { title: "Incomplete environment patchwork", sub: "Language switched to English but timezone still CN — partial disguise stands out more" },
+  lowShare: { title: "Low-sharing exit signs", sub: "Clean neighbors + clean record — dedicated or low-share exit" },
+  selfHosted: { title: "Likely self-hosted server relay", sub: "Datacenter attributes but clean & native — own VPS, not a pool" },
+  asnCollateral: { title: "Likely ASN-range collateral", sub: "Clean IP yet challenged — the whole range is flagged; change range, not IP" },
+  webrtcProxyGap: { title: "Proxy doesn't cover WebRTC", sub: "Proxy on but WebRTC leaks the real IP — enable leak protection in the client" },
+  incognitoMyth: { title: "Incognito adds nothing vs risk engines", sub: "It only isolates local storage; fingerprint and IP stay identical" },
+  dohAllFail: { title: "All DoH failed (exit still reachable)", sub: "Browser DNS resolved via proxy, or DoH fully blocked — worth confirming" },
+  sparseFonts: { title: "Unusually sparse font set", sub: "Too few detectable fonts — anti-fingerprint tooling or minimal system" },
+  registerNo: { title: "Environment not fit for new signups", sub: "Hard blockers remain (region/challenge/DC+CN signals) — fix first" },
+  registerOk: { title: "Environment ready for signups", sub: "Residential + high score + no contradictions — safe to register" },
+});
+en.inference.ev = { ...en.inference.ev,
+  lang: "Language", patchNote: "Timezone and language point to different identities",
+  neighbors0: "0 flagged neighbors", oldPrefix: "Prefix has history",
+  asnCollateralNote: "Clean IPs get challenged when neighbors abused the range",
+  webrtcLeak: "WebRTC exposed a non-exit address", proxyOn: "Flagged as proxy/VPN", webrtcFix: "Enable leak protection in the proxy client",
+  incognitoNote: "Engines sample fingerprint & network layers, unrelated to window mode",
+  dohAllNote: "Claude reachable means resolution works, just not via DoH",
+  fontsCount: "Detectable fonts", sparseNote: "Normal desktops usually >25",
+  gateOn: "Hard gate present", dcEnv: "DC exit plus CN environment signals", cnScore: "CN signal score", score: "Score",
+};
+
+en.advice = {
+  title: "Action items", note: "Grouped by priority; 'keep' means you're doing it right — avoid frequent environment changes.",
+  groups: { fix: "Fix now", improve: "Improve", keep: "Keep as is" },
+  a: {
+    gateRegion: { title: "Switch to an exit in a supported region", detail: "Current region is hard-blocked by Claude" },
+    gateChallenge: { title: "Change exit IP (flagged at the edge)", detail: "Prefer a different range over another IP in the same range" },
+    gateUnreachable: { title: "Fix claude.ai reachability first", detail: "Check official status to rule out a service-side outage" },
+    preferResidential: { title: "Move to a residential/mobile exit", detail: "If datacenter is a must: native + old prefix + low-share range" },
+    v6: { title: "Handle the IPv6 leak", detail: "Enable IPv6 in the proxy client or disable IPv6 system-wide" },
+    webrtcGap: { title: "Enable WebRTC leak protection", detail: "Clash/sing-box have switches; or block WebRTC via extension" },
+    dnsHijack: { title: "Investigate DNS hijacking", detail: "Check router DNS and local proxy config; use DoH through the proxy" },
+    abandonExit: { title: "Abandon this exit", detail: "Fresh pool range or conscripted home IP — switch before touching accounts" },
+    stopRotate: { title: "Stop exit rotation", detail: "Pin one exit; rotate fingerprint and exit together if you must" },
+    sharedVpn: { title: "Use an ordinary residential exit daily", detail: "Shared VPN/WARP/Mullvad exits are easily flagged" },
+    tz: { title: "Align system timezone with the exit", detail: "Set the exit city's timezone; on Claude Code machines also set TZ" },
+    cnEnv: { title: "Reduce CN-environment signals", detail: "Drop zh-CN from languages, align timezone, check Intl locale" },
+    cookie: { title: "Allow cookies", detail: "Disabled cookies trigger CAPTCHA loops" },
+    automation: { title: "Operate manually in a normal browser", detail: "Automation signals are high-risk for account actions" },
+    coherence: { title: "Fix profile contradictions layer by layer", detail: "Follow the coherence evidence list in deep assessment" },
+    proxyForm: { title: "Confirm proxy topology matches intent", detail: "Keep the exit constant within account sessions" },
+    alignIdentity: { title: "Complete or drop the disguise", detail: "Language and timezone pointing at different identities is the loudest tell" },
+    unifyDomains: { title: "Put all three Anthropic domains in one proxy group", detail: "Inconsistent exits get correlated at session level" },
+    confirmIntent: { title: "Confirm multi-exit is intentional", detail: "Exits must stay constant during account operations" },
+    coverDoh: { title: "Add DoH domains to routing rules", detail: "dns.google / cloudflare-dns.com should go through the proxy" },
+    changeRange: { title: "Change the range, not the IP", detail: "Flagged neighbors poison the whole subnet" },
+    waitMature: { title: "Let fresh prefixes mature before important use", detail: "Newly announced ranges often come from pool expansion" },
+    rangeNotIp: { title: "When challenged, change range not IP", detail: "Clean IPs get challenged via range collateral" },
+    incognitoNo: { title: "Don't rely on incognito windows", detail: "They change neither fingerprint nor IP" },
+    registerNo: { title: "Hold off on new signups", detail: "Clear the red/yellow items first — accounts registered from dirty environments carry the mark" },
+    keepStable: { title: "Keep the exit stable", detail: "Fixed/low-share exits help account aging" },
+    ready: { title: "Environment ready for normal use/signups", detail: "Keep the current setup; avoid stacking new disguise tools" },
+  },
+};

@@ -318,3 +318,60 @@ ja.account.login.statuses = "各端点ステータス";
 ja.account.login.steps = "claude.ai で F12 → Console に貼り付け実行 → 出力自動コピー → ここに貼り付け。メタデータのみ:org/アカウント/KYC/トライアル/信頼デバイス/メンバーと会話数/バナー/デバイス ID。メールはマスク、会話内容は読まない。";
 
 ja.testingDone = "検査完了";
+
+Object.assign(ja.inference, {
+  patchworkEnv: { title: "不完全な環境パッチ", sub: "言語は英語だが TZ は国内——中途半端な偽装は目立つ" },
+  lowShare: { title: "低共有出口の兆候", sub: "隣接クリーン+記録クリーン——専用/低共有出口" },
+  selfHosted: { title: "自前サーバー中継の疑い(専用)", sub: "DC 属性だが清潔+ネイティブ——プールではなく自前 VPS" },
+  asnCollateral: { title: "ASN 範囲の連坐の疑い", sub: "クリーンなのに挑戦——範囲全体がマーク,IP ではなく範囲を変える" },
+  webrtcProxyGap: { title: "プロキシが WebRTC 未カバー", sub: "プロキシ稼働中に WebRTC が実 IP 漏洩——漏洩防止を有効化" },
+  incognitoMyth: { title: "シークレットは風控に無効", sub: "ローカル分離のみ——指紋と IP は変わらない" },
+  dohAllFail: { title: "DoH 全滅(出口は到達可)", sub: "DNS はプロキシ経由か DoH 全面遮断——確認を" },
+  sparseFonts: { title: "フォント異常に少ない", sub: "検出数過少——抗指紋ツールか極小システム" },
+  registerNo: { title: "新規登録に不適な環境", sub: "ハードブロック残存——先に修正を" },
+  registerOk: { title: "登録可能な環境", sub: "住宅+高スコア+矛盾なし——登録に使用可" },
+});
+ja.inference.ev = { ...ja.inference.ev,
+  lang: "言語", patchNote: "TZ と言語が別の身分を指す",
+  neighbors0: "隣接 BL 0", oldPrefix: "プレフィックスに履歴",
+  asnCollateralNote: "クリーン IP が挑戦されるのは範囲内濫用の連坐",
+  webrtcLeak: "WebRTC が非出口アドレスを露出", proxyOn: "プロキシ/VPN フラグ", webrtcFix: "クライアントで漏洩防止を有効化",
+  incognitoNote: "採集されるのは指紋とネットワーク層",
+  dohAllNote: "Claude 到達可=解決経路はある(DoH 経由でないだけ)",
+  fontsCount: "検出フォント", sparseNote: "通常デスクトップは >25",
+  gateOn: "ハードゲートあり", dcEnv: "DC 出口+中国環境信号", cnScore: "中国特徴スコア", score: "スコア",
+};
+
+ja.advice = {
+  title: "対応アドバイス", note: "優先度順。「維持」は現状が正しいという意味——頻繁な変更を避けて。",
+  groups: { fix: "即時対応", improve: "改善推奨", keep: "現状維持" },
+  a: {
+    gateRegion: { title: "対応地域の出口へ変更", detail: "現出口は Claude に硬性制限" },
+    gateChallenge: { title: "出口 IP を変更(エッジマーク済)", detail: "同段の IP ではなく別の範囲へ" },
+    gateUnreachable: { title: "まず claude.ai 到達性を修復", detail: "公式ステータスでサーバー側故障を排除" },
+    preferResidential: { title: "住宅/モバイル出口へ", detail: "DC 必須なら ネイティブ+旧プレフィックス+低共有" },
+    v6: { title: "IPv6 漏洩に対処", detail: "プロキシで IPv6 有効化 or システムで無効化" },
+    webrtcGap: { title: "WebRTC 漏洩防止を有効化", detail: "Clash/sing-box のスイッチ、または拡張でブロック" },
+    dnsHijack: { title: "DNS 乗っ取りを調査", detail: "ルーター DNS とローカル設定を確認、プロキシ経由 DoH へ" },
+    abandonExit: { title: "この出口を放棄", detail: "新規プール/徴用住宅——先に乗り換え" },
+    stopRotate: { title: "出口輪替を停止", detail: "単一出口に固定;変えるなら指紋と同時" },
+    sharedVpn: { title: "日常は通常の住宅出口を", detail: "共有 VPN/WARP/Mullvad は識別されやすい" },
+    tz: { title: "システム TZ を出口に合わせる", detail: "出口都市の TZ へ;Claude Code 機は TZ 変数も" },
+    cnEnv: { title: "中国環境特徴を低減", detail: "言語リストの zh-CN 削除・TZ 整合・Intl 確認" },
+    cookie: { title: "Cookie を許可", detail: "無効化は CAPTCHA ループを誘発" },
+    automation: { title: "通常ブラウザで手動操作へ", detail: "自動化兆候は高危険" },
+    coherence: { title: "層ごとに矛盾を修復", detail: "深層評估の整合性証拠リストに従う" },
+    proxyForm: { title: "プロキシ形態が意図通りか確認", detail: "アカウントセッション中は出口一定に" },
+    alignIdentity: { title: "偽装を完成させるか止めるか", detail: "言語と TZ の不一致は最大の破綻" },
+    unifyDomains: { title: "Anthropic 3 ドメインを同一グループへ", detail: "出口不一致はセッション層で関連付けられる" },
+    confirmIntent: { title: "複数出口が意図的か確認", detail: "操作中の出口は一定を" },
+    coverDoh: { title: "DoH ドメインをルールに追加", detail: "dns.google / cloudflare-dns.com をプロキシ経由に" },
+    changeRange: { title: "IP ではなく範囲を変更", detail: "隣接 BL はサブネット全体を汚染" },
+    waitMature: { title: "新規プレフィックスは成熟を待つ", detail: "直近宣告範囲はプール拡張が多い" },
+    rangeNotIp: { title: "挑戦されたら IP でなく範囲を", detail: "クリーン IP の挑戦は範囲連坐" },
+    incognitoNo: { title: "シークレットに頼らない", detail: "指紋も IP も変わらない" },
+    registerNo: { title: "新規登録を保留", detail: "赤/黄項目を解消してから——汚い環境の登録は残る" },
+    keepStable: { title: "出口の安定を維持", detail: "固定/低共有は育成に有利" },
+    ready: { title: "環境ready、通常利用/登録可", detail: "現構成を維持、新ツールの重畳を避ける" },
+  },
+};

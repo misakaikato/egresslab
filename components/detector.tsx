@@ -24,6 +24,8 @@ import ReputationPanel, { RepData } from "./ReputationPanel";
 import ChainCard from "./ChainCard";
 import HistoryCard from "./HistoryCard";
 import InferenceCard from "./InferenceCard";
+import AdviceCard from "./AdviceCard";
+import { buildAdvice } from "@/lib/advice";
 import AccountCard from "./AccountCard";
 import { inferConclusions } from "@/lib/inference";
 import FingerprintPanel from "./FingerprintPanel";
@@ -186,6 +188,11 @@ export default function Detector({ locale }: { locale: string }) {
         : [],
     [phase, probes, direct, dual, webrtc, intel, env, dnsCheck, fp, history, scans, claude, t]
   );
+  const advices = useMemo(
+    () => (phase === "done" && score ? buildAdvice({ probes, directExits: direct.exits, dual, webrtc, intel, env, dns: dnsCheck, fp, history, scans, claudeReachable: probes.length ? claude?.status !== "failed" : undefined }, score, conclusions, t) : []),
+    [phase, score, conclusions, probes, direct, dual, webrtc, intel, env, dnsCheck, fp, history, scans, claude, t]
+  );
+
   const savedAt = useRef(0);
   useEffect(() => {
     if (phase !== "done" || !score || !head || !vCards) return;
@@ -426,6 +433,7 @@ export default function Detector({ locale }: { locale: string }) {
             ))}
           </div>
           {conclusions.length ? <InferenceCard conclusions={conclusions} t={t.inference} /> : null}
+          {advices.length ? <AdviceCard items={advices} t={t.advice} /> : null}
           <AccountCard t={t.account} />
           {scans.length ? (
             <HistoryCard scans={scans} t={t.history} />

@@ -323,3 +323,60 @@ zh.account.login.statuses = "各端点状态码";
 zh.account.login.steps = "在 claude.ai 任一页面按 F12 → Console 粘贴运行下方脚本 → 输出自动复制 → 回到此处粘贴解析。只读元数据:org/账号/KYC/试用/信任设备/成员与会话计数/官方横幅/设备 ID;邮箱脱敏显示,不读取任何会话内容。";
 
 zh.testingDone = "检测完成";
+
+Object.assign(zh.inference, {
+  patchworkEnv: { title: "环境拼接不完整", sub: "语言已全英文但时区仍在国内——半伪装状态比不伪装更显眼" },
+  lowShare: { title: "出口低共享迹象", sub: "段内邻居干净+记录清白——独享或低共享出口" },
+  selfHosted: { title: "疑似自建服务器中转(独享)", sub: "机房属性但段干净且原生——自建 VPS 出口,非代理池" },
+  asnCollateral: { title: "疑似 ASN 段连坐", sub: "IP 记录干净却被挑战——整段被标记,换段而非换 IP" },
+  webrtcProxyGap: { title: "代理未覆盖 WebRTC", sub: "代理开着但 WebRTC 漏了真实 IP——客户端需开「防止 WebRTC 泄漏」" },
+  incognitoMyth: { title: "隐身窗口对风控无增益", sub: "隐身只隔离本地存储,不改变指纹与 IP——别指望它防关联" },
+  dohAllFail: { title: "DoH 全部失败(出口仍可达)", sub: "浏览器 DNS 经代理解析,或 DoH 被全面拦截——非致命但值得确认" },
+  sparseFonts: { title: "字体集异常稀少", sub: "可探测字体过少——反字体指纹工具或极简系统" },
+  registerNo: { title: "当前环境不宜注册新账号", sub: "硬伤未清(地区/挑战/机房+大陆特征),先按建议修复" },
+  registerOk: { title: "环境达到注册标准", sub: "家宽+高评分+无伪装矛盾——可以用来注册新账号" },
+});
+zh.inference.ev = { ...zh.inference.ev,
+  lang: "语言", patchNote: "时区与语言指向不同身份",
+  neighbors0: "段内邻居 0 被标记", oldPrefix: "前缀历史较长",
+  asnCollateralNote: "干净 IP 被挑战通常因同段邻居滥用",
+  webrtcLeak: "WebRTC 暴露了非出口地址", proxyOn: "情报标记为代理/VPN", webrtcFix: "在代理客户端开启泄漏防护",
+  incognitoNote: "风控采集的是指纹与网络层,与窗口模式无关",
+  dohAllNote: "Claude 可达说明解析路径存在,只是不走 DoH",
+  fontsCount: "可探测字体", sparseNote: "正常桌面系统通常 >25",
+  gateOn: "存在硬性门控", dcEnv: "机房出口叠加大陆环境特征", cnScore: "大陆特征分", score: "评分",
+};
+
+zh.advice = {
+  title: "处置建议", note: "按优先级分组;「保持」项说明当前做法正确,勿频繁变更环境。",
+  groups: { fix: "立即处理", improve: "建议优化", keep: "保持现状" },
+  a: {
+    gateRegion: { title: "更换到官方支持地区的出口", detail: "当前出口地区被 Claude 硬性限制,任何账号操作都会受限" },
+    gateChallenge: { title: "更换出口 IP(已被边缘标记)", detail: "优先换段而非换同段 IP;若记录干净可先观察是否段连坐" },
+    gateUnreachable: { title: "先修复 claude.ai 可达性", detail: "网页端都连不上,先解决链路(对照官方状态确认非服务端故障)" },
+    preferResidential: { title: "出口换成家宽或移动网络", detail: "机房/云/转接出口注册登录更易触发验证;若必须机房,选原生+老前缀+低共享段" },
+    v6: { title: "处理 IPv6 泄漏", detail: "代理客户端开启 IPv6 转发,或系统禁用 IPv6(macOS:网络设置 TCP/IP 仅本地链接;Linux: sysctl disable_ipv6)" },
+    webrtcGap: { title: "开启代理的 WebRTC 泄漏防护", detail: "Clash/sing-box 均有对应开关;或在浏览器扩展层屏蔽 WebRTC" },
+    dnsHijack: { title: "排查 DNS 劫持", detail: "检查路由器 DNS 与本地代理的 DNS 配置,改用加密 DNS(DoH)出代理" },
+    abandonExit: { title: "弃用当前出口", detail: "代理池新段/被征用家宽,换成熟出口再操作账号" },
+    stopRotate: { title: "停止出口轮换", detail: "固定单一出口;若必须换,指纹与出口同批更换,避免单边稳定被聚类" },
+    sharedVpn: { title: "日常使用换普通家宽出口", detail: "VPN/WARP/Mullvad 共享出口识别率高,仅作临时用途" },
+    tz: { title: "系统时区与出口对齐", detail: "改为出口城市时区;跑 Claude Code 的机器另设 TZ 环境变量" },
+    cnEnv: { title: "降低大陆环境特征", detail: "语言表移除 zh-CN(或移出首位)、时区对齐、检查 Intl 区域——对照环境卡逐项" },
+    cookie: { title: "允许 Cookie", detail: "禁用 Cookie 会触发 Cloudflare 人机验证循环" },
+    automation: { title: "改用正常浏览器手动操作", detail: "自动化特征(webdriver/软件渲染)是账号操作的高危信号" },
+    coherence: { title: "逐层修复画像矛盾", detail: "对照深度研判的「跨层自洽度」证据清单,把时区/指纹/DNS/出口各层对齐" },
+    proxyForm: { title: "确认代理形态是否符合预期", detail: "全局/分流形态影响所有域名行为;账号会话内保持恒定" },
+    alignIdentity: { title: "补全环境伪装或放弃伪装", detail: "语言与时区指向不同身份是最显眼的破绽,二选一对齐" },
+    unifyDomains: { title: "Anthropic 三域名放同一代理组", detail: "claude.ai / api.anthropic.com / platform.claude.com 出口不一致会被会话层关联" },
+    confirmIntent: { title: "确认多出口是有意配置", detail: "若为规则代理,注意任何账号操作期间出口应恒定" },
+    coverDoh: { title: "分流规则补齐 DoH 域名", detail: "dns.google / cloudflare-dns.com 加入代理规则,避免直连被阻" },
+    changeRange: { title: "更换网段", detail: "邻居被标记的段整体信誉差,同段换 IP 无效" },
+    waitMature: { title: "新前缀先观察再用于重要操作", detail: "刚宣告的段常来自代理池扩容" },
+    rangeNotIp: { title: "被挑战时换段而非换 IP", detail: "记录干净却被挑战多为段连坐" },
+    incognitoNo: { title: "不要依赖隐身窗口", detail: "它不改变指纹与 IP,防关联需环境层(指纹+出口)隔离" },
+    registerNo: { title: "暂缓注册新账号", detail: "先清掉上方红/黄项,再注册——注册即入画像,脏环境注册的账号带终身标记" },
+    keepStable: { title: "保持出口稳定", detail: "固定/低共享出口是账号养成的加分项,勿频繁更换" },
+    ready: { title: "环境就绪,可正常使用/注册", detail: "维持当前配置,避免叠加新的伪装工具" },
+  },
+};
