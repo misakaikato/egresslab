@@ -7,6 +7,7 @@ import type { StackInfo } from "./detect/dualstack";
 import type { FingerprintResult } from "./detect/fingerprint";
 import { coloToCountry } from "./colos";
 import type { ScanRecord } from "./detect/scanHistory";
+import type { DnsLeakResult } from "./detect/dnsleak";
 
 export interface Conclusion {
   id: string;
@@ -30,6 +31,7 @@ export interface InferenceInput {
   scans: ScanRecord[];
   claudeReachable: boolean | undefined;
   score?: import("./types").ScoreResult;
+  dnsLeak?: DnsLeakResult;
 }
 
 const CN_TZ = ["Asia/Shanghai", "Asia/Urumqi", "Asia/Chongqing", "PRC"];
@@ -309,6 +311,21 @@ export function inferConclusions(input: InferenceInput, t: any): Conclusion[] {
     const goodConds = !score.gate && score.score >= 80 && (network.asn_type === "residential" || network.asn_type === "mobile");
     if (badConds) out.push({ id: "registerNo", tone: "bad", confidence: "high", title: I.registerNo.title, subtitle: I.registerNo.sub, evidence: [score.gate ? I.ev.gateOn : I.ev.dcEnv, `${I.ev.cnScore}: ${input.env?.score ?? "—"}`] });
     else if (goodConds) out.push({ id: "registerOk", tone: "good", confidence: "high", title: I.registerOk.title, subtitle: I.registerOk.sub, evidence: [`${I.ev.score}: ${score.score}`, I.ev.residential, I.ev.noLies] });
+  }
+
+  // ── 真 DNS 泄漏(dnsleak-server 部署后启用) ──
+  if (input.dnsLeak?.available && input.dnsLeak.resolvers.length && input.dnsLeak.mismatch) {
+    const cnResolver = input.dnsLeak.resolvers.some((r) => r.country === "CN");
+    out.push({
+      id: cnResolver ? "dnsLeakCn" : "dnsLeakForeign",
+      tone: "bad", confidence: "high",
+      title: cnResolver ? I.dnsLeakCn.title : I.dnsLeakForeign.title,
+      subtitle: cnResolver ? I.dnsLeakCn.sub : I.dnsLeakForeign.sub,
+      evidence: [
+        ...input.dnsLeak.resolvers.slice(0, 3).map((r) => `resolver ${r.ip} (${r.country || "?"})`),
+        `${I.ev.claudeExit}: ${input.dnsLeak.exitCountry || "?"}`,
+      ],
+    });
   }
 
   // ── R12: 最优家宽环境 ──

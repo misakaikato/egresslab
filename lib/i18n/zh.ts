@@ -380,3 +380,10 @@ zh.advice = {
     ready: { title: "环境就绪,可正常使用/注册", detail: "维持当前配置,避免叠加新的伪装工具" },
   },
 };
+
+zh.path.dnsleak = "真 DNS 出口";
+zh.path.dnsleakNone = "未观察到查询";
+Object.assign(zh.inference, {
+  dnsLeakCn: { title: "DNS 走国内递归(真泄漏)", sub: "出口在海外但解析器从国内来查——DNS 未随代理,暴露真实网络位置" },
+  dnsLeakForeign: { title: "DNS 递归与出口不同国", sub: "解析路径与流量出口不一致——存在 DNS 分流或泄漏" },
+});

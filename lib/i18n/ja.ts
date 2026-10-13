@@ -375,3 +375,10 @@ ja.advice = {
     ready: { title: "環境ready、通常利用/登録可", detail: "現構成を維持、新ツールの重畳を避ける" },
   },
 };
+
+ja.path.dnsleak = "実 DNS 出口";
+ja.path.dnsleakNone = "照会なし";
+Object.assign(ja.inference, {
+  dnsLeakCn: { title: "DNS が国内再帰(真の漏洩)", sub: "出口は海外なのにリゾルバが国内から——DNS がプロキシ外で実位置を露出" },
+  dnsLeakForeign: { title: "DNS 再帰と出口国が不一致", sub: "解決経路と出口不一致——DNS 分流か漏洩" },
+});

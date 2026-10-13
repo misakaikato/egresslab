@@ -1,0 +1,12 @@
+{
+  "name": "exitlens-dnsleak",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "dns-packet": "^5.6.1"
+  }
+}

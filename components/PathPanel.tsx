@@ -4,6 +4,7 @@ import type { TraceProbe, IntelResult } from "@/lib/types";
 import { StackInfo } from "@/lib/detect/dualstack";
 import { distinctExits, type EchoResult, type HistoryVerdict } from "@/lib/detect/direct";
 import type { DnsCheck } from "@/lib/detect/dns";
+import type { DnsLeakResult } from "@/lib/detect/dnsleak";
 
 function Row({ label, value, tone }: { label: string; value: string; tone?: "good" | "bad" | "muted" }) {
   const color = tone === "good" ? "var(--good)" : tone === "bad" ? "var(--bad)" : tone === "muted" ? "var(--muted)" : "var(--ink)";
@@ -27,6 +28,7 @@ export default function PathPanel({
   browserTz,
   dns,
   history,
+  dnsLeak,
 }: {
   t: any;
   claude: TraceProbe | undefined;
@@ -37,6 +39,7 @@ export default function PathPanel({
   browserTz: string;
   dns: DnsCheck | null;
   history: HistoryVerdict | null;
+  dnsLeak: DnsLeakResult | null;
 }) {
   const exits = claude?.ip || intel?.ip;
   const distinct = distinctExits(direct.exits);
@@ -96,6 +99,13 @@ export default function PathPanel({
           <Row label={t.h7d} value={`${history.switches7d} ${t.times}`} tone={history.switches7d > 0 ? "bad" : "good"} />
           <Row label={t.trail} value={history.trail.join(" → ") || "—"} tone="muted" />
         </>
+      ) : null}
+      {dnsLeak?.available ? (
+        <Row
+          label={t.dnsleak}
+          value={dnsLeak.resolvers.length ? dnsLeak.resolvers.map((r) => `${r.ip}(${r.country || "?"})`).join(" · ") : t.dnsleakNone}
+          tone={dnsLeak.mismatch ? "bad" : dnsLeak.resolvers.length ? "good" : "muted"}
+        />
       ) : null}
       <SafetyChips intel={intel} t={t.safety} />
     </div>

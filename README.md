@@ -67,6 +67,17 @@ curl -s -X POST localhost:3000/api/v1/check \
 
 评分口径:服务端可见维度(出口网络 35 + IP 信誉 15,覆盖 50/100),浏览器维度(泄漏/一致性/环境/自动化)需用页面检测。`lang` 支持 zh/en/ja。配置 `EGRESSLAB_API_KEY` 后需携带 `x-api-key` 头。每次调用写入本地信誉库。
 
+### 真 DNS 泄漏检测(可选,需一台可开 UDP 53 的主机)
+
+部署 [`dnsleak-server/`](dnsleak-server/README.md)(权威观察者 + 日志 API),Cloudflare 为 `leak.exitlens.<域名>` 加 NS 记录指向该机,然后配置环境变量:
+
+```
+DNSLEAK_ZONE=leak.exitlens.<你的域名>
+DNSLEAK_API=http://<该机IP>:8090
+```
+
+检测页将新增「真 DNS 出口」行与泄漏研判结论;未配置时模块自动隐藏。CF Workers / Vercel 无法承载(无 UDP)。
+
 ### 蜜罐上报(为将来部署 Cowrie 等传感器预留)
 
 ```bash

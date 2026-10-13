@@ -375,3 +375,10 @@ en.advice = {
     ready: { title: "Environment ready for normal use/signups", detail: "Keep the current setup; avoid stacking new disguise tools" },
   },
 };
+
+en.path.dnsleak = "Real DNS egress";
+en.path.dnsleakNone = "no queries observed";
+Object.assign(en.inference, {
+  dnsLeakCn: { title: "DNS uses CN recursors (real leak)", sub: "Exit abroad but resolvers query from CN — DNS bypasses the proxy, exposing real location" },
+  dnsLeakForeign: { title: "DNS recursors differ from exit country", sub: "Resolution path inconsistent with traffic exit — DNS split or leak" },
+});

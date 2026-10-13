@@ -14,6 +14,7 @@ import { detectWebRtc } from "@/lib/detect/webrtc";
 import { scanEnvironment, EnvScanResult } from "@/lib/detect/environment";
 import { collectAutomation } from "@/lib/detect/automation";
 import { checkDns, type DnsCheck } from "@/lib/detect/dns";
+import { runDnsLeak, type DnsLeakResult } from "@/lib/detect/dnsleak";
 import { coloToCountry } from "@/lib/colos";
 import ScoreDial from "./ScoreDial";
 import DimensionBars from "./DimensionBars";
@@ -53,6 +54,7 @@ export default function Detector({ locale }: { locale: string }) {
   const [env, setEnv] = useState<EnvScanResult | null>(null);
   const [auto, setAuto] = useState<AutoInfo | null>(null);
   const [dnsCheck, setDns] = useState<DnsCheck | null>(null);
+  const [dnsLeak, setDnsLeak] = useState<DnsLeakResult | null>(null);
   const [mode, setMode] = useState<"simple" | "pro">("simple");
   useEffect(() => {
     try { const v = localStorage.getItem("exitlens:view") ?? localStorage.getItem("egresslab:view"); if (v === "pro" || v === "simple") setMode(v); } catch {}
@@ -128,6 +130,9 @@ export default function Detector({ locale }: { locale: string }) {
     setDual(dualR);
     setStepBits((b) => b | 0b1);
 
+    // 真 DNS 泄漏(与情报/泄漏组并行,依赖出口国家)
+    const dnsLeakP = runDnsLeak(traceList[0]?.country || "").catch(() => null);
+
     // 泄漏与环境组
     const [webrtcR, envR, dnsR, aiR, fpR] = await Promise.all([webrtcP, envP, dnsP, aiP, fpP]);
     setWebrtc(webrtcR);
@@ -141,6 +146,7 @@ export default function Detector({ locale }: { locale: string }) {
     setStepBits((b) => b | 0b100);
 
     await intelP;
+    setDnsLeak(await dnsLeakP);
     const exitIpForHist = traceList[0]?.ip || directR.ip;
     const exitCountry = traceList[0]?.country || "";
     if (exitIpForHist) setHistory(recordExit(exitIpForHist, String(exitCountry || "").toUpperCase()));
@@ -200,14 +206,14 @@ export default function Detector({ locale }: { locale: string }) {
     () =>
       phase === "done"
         ? inferConclusions(
-            { probes, directExits: direct.exits, dual, webrtc, intel, env, dns: dnsCheck, fp, history, scans, claudeReachable: probes.length ? claude?.status !== "failed" : undefined },
+            { probes, directExits: direct.exits, dual, webrtc, intel, env, dns: dnsCheck, fp, history, scans, claudeReachable: probes.length ? claude?.status !== "failed" : undefined, dnsLeak: dnsLeak || undefined },
             t
           )
         : [],
-    [phase, probes, direct, dual, webrtc, intel, env, dnsCheck, fp, history, scans, claude, t]
+    [phase, probes, direct, dual, webrtc, intel, env, dnsCheck, fp, history, scans, claude, t, dnsLeak]
   );
   const advices = useMemo(
-    () => (phase === "done" && score ? buildAdvice({ probes, directExits: direct.exits, dual, webrtc, intel, env, dns: dnsCheck, fp, history, scans, claudeReachable: probes.length ? claude?.status !== "failed" : undefined }, score, conclusions, t) : []),
+    () => (phase === "done" && score ? buildAdvice({ probes, directExits: direct.exits, dual, webrtc, intel, env, dns: dnsCheck, fp, history, scans, claudeReachable: probes.length ? claude?.status !== "failed" : undefined, dnsLeak: dnsLeak || undefined }, score, conclusions, t) : []),
     [phase, score, conclusions, probes, direct, dual, webrtc, intel, env, dnsCheck, fp, history, scans, claude, t]
   );
 
@@ -415,7 +421,7 @@ export default function Detector({ locale }: { locale: string }) {
             {vCards.map((c) => (
               <VerdictCard key={c.key} title={c.title} subtitle={c.subtitle} tone={c.tone} label={t.expand}>
                 {c.expandKey === "path" ? (
-                  <PathPanel t={t.path} claude={claude} direct={direct} v4={dual.v4} v6={dual.v6} intel={intel} browserTz={env?.detail.timezone || ""} dns={dnsCheck} history={history} />
+                  <PathPanel t={t.path} claude={claude} direct={direct} v4={dual.v4} v6={dual.v6} intel={intel} browserTz={env?.detail.timezone || ""} dns={dnsCheck} history={history} dnsLeak={dnsLeak} />
                 ) : c.expandKey === "probes" ? (
                   <ProbeTable probes={probes} t={t.probes} />
                 ) : c.expandKey === "env" ? (
@@ -496,7 +502,7 @@ export default function Detector({ locale }: { locale: string }) {
         <section className="grid md:grid-cols-2 gap-4 fade-in">
           <div className="card p-5">
             <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Map size={14} className="text-accent" />{t.path.title}</h3>
-            <PathPanel t={t.path} claude={claude} direct={direct} v4={dual.v4} v6={dual.v6} intel={intel} browserTz={env?.detail.timezone || ""} dns={dnsCheck} history={history} />
+            <PathPanel t={t.path} claude={claude} direct={direct} v4={dual.v4} v6={dual.v6} intel={intel} browserTz={env?.detail.timezone || ""} dns={dnsCheck} history={history} dnsLeak={dnsLeak} />
           </div>
           <div className="card p-5">
             <h3 className="text-sm font-semibold mb-1 flex items-center gap-2"><Activity size={14} className="text-accent" />{t.probes.title}</h3>
