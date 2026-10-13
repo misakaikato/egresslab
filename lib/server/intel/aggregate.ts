@@ -34,8 +34,8 @@ export async function aggregateIp(rawIp: string): Promise<IntelResult> {
 
   const failed: string[] = [];
   const [tf, sfs, fhOk] = await Promise.all([threatfoxHit(ip).catch(() => null), sfsCheck(ip).catch(() => null), loadFirehol()]);
-  const settled = await Promise.allSettled([fromIpWho(ip), fromIpApiCom(ip), fromRdap(ip), getTorSet(), dnsblScore(ip)]);
-  const regCountry = await whoisCountry(ip).catch(() => null);
+  const settled = await Promise.allSettled([fromIpWho(ip), fromIpApiCom(ip), fromRdap(ip), getTorSet(), dnsblScore(ip), whoisCountry(ip).catch(() => null)]);
+  const regCountry = settled[5].status === "fulfilled" ? (settled[5].value as string | null) : null;
   const who = settled[0].status === "fulfilled" ? (settled[0].value as GeoSource | undefined) : undefined;
   const api = settled[1].status === "fulfilled" ? (settled[1].value as Awaited<ReturnType<typeof fromIpApiCom>> | undefined) : undefined;
   const rdap = settled[2].status === "fulfilled" ? (settled[2].value as GeoSource | undefined) : undefined;
@@ -140,30 +140,28 @@ export async function aggregateIp(rawIp: string): Promise<IntelResult> {
   }
 
   // 服务端免费增强:PTR 一致性 / 前缀年龄 / 邻居采样(并行,失败静默)
-  const [ptr, firstSeen, neighbors] = await Promise.all([ptrCheck(ip).catch(() => null), prefixFirstSeen(ip).catch(() => null), neighborFlags(ip).catch(() => null)]);
+  const pcKeyEarly = process.env.PROXYCHECK_API_KEY ? fromProxycheck(ip, process.env.PROXYCHECK_API_KEY).catch(() => null) : null;
+  const abKeyEarly = process.env.ABUSEIPDB_API_KEY ? fromAbuseipdb(ip, process.env.ABUSEIPDB_API_KEY).catch(() => null) : null;
+  const [ptr, firstSeen, neighbors, pcEarly, abEarly] = await Promise.all([ptrCheck(ip).catch(() => null), prefixFirstSeen(ip).catch(() => null), neighborFlags(ip).catch(() => null), pcKeyEarly, abKeyEarly]);
   if (ptr) network.ptr = ptr as any;
   if (firstSeen) risk.prefix_first_seen = firstSeen;
   if (neighbors) risk.neighbors_flagged = neighbors.flagged;
 
-  // 可选增强源
-  const pcKey = process.env.PROXYCHECK_API_KEY;
-  const abKey = process.env.ABUSEIPDB_API_KEY;
-  if (pcKey) {
-    const pc = await fromProxycheck(ip, pcKey);
-    if (pc) {
-      risk.is_vpn = pc.vpn;
-      risk.is_proxy = risk.is_proxy || pc.proxy;
-      risk.is_residential_proxy = pc.residential;
-      sources.push("proxycheck");
-    } else failed.push("proxycheck");
-  }
-  if (abKey) {
-    const ab = await fromAbuseipdb(ip, abKey);
-    if (ab !== null) {
+  // 可选增强源(已在上方并行预取)
+  const pc = pcEarly;
+  if (pc) {
+    risk.is_vpn = pc.vpn;
+    risk.is_proxy = risk.is_proxy || pc.proxy;
+    risk.is_residential_proxy = pc.residential;
+    sources.push("proxycheck");
+  } else if (pc === null) failed.push("proxycheck");
+  {
+    const ab = abEarly;
+    if (ab !== null && ab !== undefined) {
       risk.abuse_score = ab;
       risk.is_abuser = ab >= 50;
       sources.push("abuseipdb");
-    } else failed.push("abuseipdb");
+    } else if (ab === null) failed.push("abuseipdb");
   }
 
   const result: IntelResult = {

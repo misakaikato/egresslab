@@ -39,7 +39,7 @@ interface AutoInfo { webdriver: boolean; cookie: boolean; webglRenderer: string;
 export default function Detector({ locale }: { locale: string }) {
   const t = useMemo(() => dict(locale), [locale]);
   const [phase, setPhase] = useState<Phase>("idle");
-  const [step, setStep] = useState(0); // 0-4 进度
+  const [stepBits, setStepBits] = useState(0); // 位图:bit0=出口路径 bit1=IP情报 bit2=连通性 bit3=泄漏与环境
   const [probes, setProbes] = useState<TraceProbe[]>([]);
   const [direct, setDirect] = useState<{ ip: string; via: string; exits: EchoResult[] }>({ ip: "", via: "", exits: [] });
   const [history, setHistory] = useState<HistoryVerdict | null>(null);
@@ -78,62 +78,80 @@ export default function Detector({ locale }: { locale: string }) {
 
   const run = useCallback(async () => {
     setPhase("running");
+    setStepBits(0);
     setElapsed(0);
-    setStep(0);
     setProbes([]);
     setIntel(null);
     setIntelFailed(false);
     setEnv(null);
     setAuto(null);
     setRep(null);
+    setFp(null);
     setWebrtc({ status: "checking", publicIps: [] });
-    // 1. 并行:三域名 trace + 直连 + 双栈
     const hostList = [...ANTHROPIC_HOSTS];
     setProbes(hostList.map((h) => ({ host: h, status: "pending", ip: "", country: "", warp: "", colo: "", ms: 0, fallback: false, httpStatus: 0, challenged: false })));
-    const [traceList, directR, dualR] = await Promise.all([
-      Promise.all(hostList.map((h) => probeTrace(h))),
-      probeDirect(),
-      probeDualStack(),
+
+    // ── 全并行:t=0 同时启动所有独立任务 ──
+    const tracePs = hostList.map((h) => probeTrace(h));
+    const directP = probeDirect();
+    const dualP = probeDualStack();
+    const webrtcP = detectWebRtc();
+    const envP = scanEnvironment();
+    const dnsP = checkDns();
+    const aiP = probeAiPack();
+    const fpP = collectFingerprint().catch(() => null);
+
+    // 情报早触发:claude.ai trace 或 直连回显 先到先用
+    const ipReadyP = Promise.race([
+      tracePs[0].then((p) => p.ip || "").catch(() => ""),
+      directP.then((d) => d.ip || "").catch(() => ""),
     ]);
+    const intelP = ipReadyP.then(async (targetIp) => {
+      if (!targetIp) return null;
+      try {
+        const res = await fetch(`/api/ip/${encodeURIComponent(targetIp)}`);
+        const j = await res.json();
+        if (j?.ok) {
+          setIntel(j);
+          setStepBits((b) => b | 0b10);
+          return j;
+        }
+      } catch {}
+      setIntelFailed(true);
+      return null;
+    });
+
+    // 出口路径组
+    const [traceList, directR, dualR] = await Promise.all([Promise.all(tracePs), directP, dualP]);
     setProbes(traceList);
     setDirect(directR);
     setDual(dualR);
-    setStep(1);
-    // 2. IP 情报
-    const claudeIp = traceList[0]?.ip || "";
-    const targetIp = claudeIp || directR.ip;
-    let intelR: IntelResult | null = null;
-    if (targetIp) {
-      try {
-        const res = await fetch(`/api/ip/${encodeURIComponent(targetIp)}`);
-        intelR = await res.json();
-        if (!intelR?.ok) intelR = null;
-      } catch {}
-    }
-    setIntel(intelR);
-    setIntelFailed(!!targetIp && !intelR);
-    setStep(2);
-    // 3. WebRTC + DNS + 环境 + 自动化
-    const [webrtcR, envR, dnsR, aiR] = await Promise.all([detectWebRtc(), scanEnvironment(), checkDns(), probeAiPack()]);
+    setStepBits((b) => b | 0b1);
+
+    // 泄漏与环境组
+    const [webrtcR, envR, dnsR, aiR, fpR] = await Promise.all([webrtcP, envP, dnsP, aiP, fpP]);
     setWebrtc(webrtcR);
     setEnv(envR);
     setDns(dnsR);
     setAiPack(aiR);
+    setFp(fpR);
     setAuto(collectAutomation());
-    setFp(await collectFingerprint().catch(() => null));
-    const exitCountry = traceList[0]?.country || intelR?.geo?.country_code || "";
-    const exitIpForHist = claudeIp || directR.ip;
+    setStepBits((b) => b | 0b1000);
+    // 连通性组(claude 可达性 + AI 包)
+    setStepBits((b) => b | 0b100);
+
+    await intelP;
+    const exitIpForHist = traceList[0]?.ip || directR.ip;
+    const exitCountry = traceList[0]?.country || "";
     if (exitIpForHist) setHistory(recordExit(exitIpForHist, String(exitCountry || "").toUpperCase()));
-    setStep(3);
-    // 4. 历史信誉
-    const repIp = claudeIp || directR.ip;
+    const repIp = exitIpForHist;
     if (repIp) {
       try {
         const rj = await fetch(`/api/reputation?ip=${encodeURIComponent(repIp)}`).then((r) => r.json());
         setRep(rj);
       } catch {}
     }
-    setStep(4);
+    setStepBits(0b1111);
     setPhase("done");
   }, []);
 
@@ -315,8 +333,8 @@ export default function Detector({ locale }: { locale: string }) {
         <div className="card p-5 mb-6 overflow-hidden relative" style={{ opacity: phase === "done" ? 0.55 : 1, transition: "opacity .5s" }}>
           <div className="flex items-center justify-between gap-2">
             {steps.map((label, i) => {
-              const done = i < step || phase === "done";
-              const active = i === step && busy;
+              const done = ((stepBits >> i) & 1) === 1 || phase === "done";
+              const active = i >= 0 && ((stepBits >> i) & 1) === 0 && busy && i === [0,1,2,3].find((k) => ((stepBits >> k) & 1) === 0);
               return (
                 <div key={i} className="flex items-center gap-1.5 min-w-0">
                   <span
@@ -338,7 +356,7 @@ export default function Detector({ locale }: { locale: string }) {
                     )}
                   </span>
                   <span className={`text-[11.5px] truncate transition-colors ${active ? "text-accent font-semibold" : done ? "text-soft" : "text-muted"}`}>{label}</span>
-                  {i < steps.length - 1 ? <span className={`step-link hidden sm:block ${i < step || phase === "done" ? "filled" : ""}`} /> : null}
+                  {i < steps.length - 1 ? <span className={`step-link hidden sm:block ${((stepBits >> i) & 1) === 1 || phase === "done" ? "filled" : ""}`} /> : null}
                 </div>
               );
             })}
@@ -347,14 +365,14 @@ export default function Detector({ locale }: { locale: string }) {
             <span>
               {busy ? (
                 <>
-                  ▸ {steps[Math.min(step, steps.length - 1)]}
+                  ▸ {steps[[0, 1, 2, 3].find((k) => ((stepBits >> k) & 1) === 0) ?? steps.length - 1]}
                   <span className="typing-dots"><i /><i /><i /></span>
                 </>
               ) : (
                 <span style={{ color: "var(--good)" }}>✓ {t.testingDone || "完成"}</span>
               )}
             </span>
-            <span className="mono tabular-nums">{elapsed.toFixed(1)}s · {Math.min(step + 1, steps.length)} / {steps.length}</span>
+            <span className="mono tabular-nums">{elapsed.toFixed(1)}s · {[0,1,2,3].filter((k) => ((stepBits >> k) & 1) === 1).length} / {steps.length}</span>
           </div>
           <div className="progress-track mt-2 h-1.5 rounded-full bg-line overflow-hidden">
             <span className="tick" style={{ left: "25%" }} />
@@ -363,7 +381,7 @@ export default function Detector({ locale }: { locale: string }) {
             <div
               className="progress-fill h-full rounded-full"
               style={{
-                width: `${Math.min(100, Math.round(((phase === "done" ? steps.length : step) / steps.length) * 100))}%`,
+                width: `${Math.min(100, Math.round(((phase === "done" ? 4 : [0,1,2,3].filter((k) => ((stepBits >> k) & 1) === 1).length) / steps.length) * 100))}%`,
                 background: "linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 60%, var(--good)))",
               }}
             />

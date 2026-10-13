@@ -53,27 +53,31 @@ async function dohFetch(url: string): Promise<string[]> {
 export async function checkDns(hosts: string[] = ["claude.ai", "api.anthropic.com"]): Promise<DnsCheck> {
   const out: DnsCheck = { status: "failed", providers: [], polluted: null, outOfRange: [], sampled: [] };
   let okProviders = 0;
-  for (const p of PROVIDERS) {
-    let ok = false;
-    for (const h of hosts) {
-      try {
-        const ips = await dohFetch(p.url(h));
-        if (ips.length) {
-          ok = true;
-          out.providers.push(p.name);
-          for (const ip of ips) {
-            if (isCloudflareIp(ip)) {
-              if (out.sampled.length < 4) out.sampled.push(ip);
-            } else {
-              out.polluted = true;
-              if (out.outOfRange.length < 4) out.outOfRange.push(`${h} → ${ip}`);
+  await Promise.all(
+    PROVIDERS.map(async (p) => {
+      let ok = false;
+      await Promise.all(
+        hosts.map(async (h) => {
+          try {
+            const ips = await dohFetch(p.url(h));
+            if (ips.length) {
+              ok = true;
+              out.providers.push(p.name);
+              for (const ip of ips) {
+                if (isCloudflareIp(ip)) {
+                  if (out.sampled.length < 4) out.sampled.push(ip);
+                } else {
+                  out.polluted = true;
+                  if (out.outOfRange.length < 4) out.outOfRange.push(`${h} → ${ip}`);
+                }
+              }
             }
-          }
-        }
-      } catch {}
-    }
-    if (ok) okProviders++;
-  }
+          } catch {}
+        })
+      );
+      if (ok) okProviders++;
+    })
+  );
   if (okProviders === PROVIDERS.length) out.status = "ok";
   else if (okProviders > 0) out.status = "partial";
   if (out.polluted === null && okProviders > 0) out.polluted = false;
