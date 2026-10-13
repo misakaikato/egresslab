@@ -1,6 +1,7 @@
 // 各免费数据源适配:ipwho.is / ip-api.com / rdap / DNSBL / 可选 proxycheck+abuseipdb
 export interface GeoSource {
   country_code?: string;
+  region?: string;
   country_en?: string;
   city?: string;
   timezone?: string;
@@ -256,4 +257,41 @@ export function classifyNetwork(opts: { hosting?: boolean; mobile?: boolean; asn
     if (/Cable|MSO|ISP|Enterprise/.test(opts.pdb.info_type)) return { type: opts.pdb.info_type.includes("Enterprise") ? "business" : "isp", pdbType: opts.pdb.info_type };
   }
   return { type: "isp", pdbType: opts.pdb?.info_type || null };
+}
+
+// IP2Location.io 在线 API(含 is_proxy / usage_type)
+export async function fromIp2LocationIo(ip: string, key: string): Promise<GeoSource & { proxy?: boolean; usageType?: string }> {
+  const j = await jsonFetch(`https://api.ip2location.io/?key=${key}&ip=${encodeURIComponent(ip)}&format=json`, 10000);
+  if (j === null || j === undefined || j.error) throw new Error(j?.error || "ip2location.io failed");
+  return {
+    country_code: j.country_code,
+    country_en: j.country_name,
+    region: j.region_name,
+    city: j.city_name,
+    timezone: j.time_zone,
+    latitude: typeof j.latitude === "number" ? j.latitude : undefined,
+    longitude: typeof j.longitude === "number" ? j.longitude : undefined,
+    asn: j.asn,
+    asn_name: j.as,
+    proxy: j.is_proxy === true,
+    usageType: j.usage_type ? String(j.usage_type) : undefined,
+  };
+}
+
+// IPInfo 在线 API(token 复用 IPINFO_TOKEN)
+export async function fromIpInfoApi(ip: string, token: string): Promise<GeoSource> {
+  const j = await jsonFetch(`https://ipinfo.io/${encodeURIComponent(ip)}/json?token=${token}`, 10000);
+  if (j?.error) throw new Error(String(j.error));
+  const loc = String(j.loc || "").split(",");
+  return {
+    country_code: j.country,
+    country_en: j.country,
+    region: j.region,
+    city: j.city,
+    timezone: j.timezone,
+    latitude: loc[0] ? Number(loc[0]) : undefined,
+    longitude: loc[1] ? Number(loc[1]) : undefined,
+    asn_name: j.org,
+    isp: j.org,
+  };
 }

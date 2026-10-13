@@ -3,7 +3,7 @@ import type { IntelResult } from "../../types";
 import { getDb, dbTry } from "../db";
 import { getTorSet, loadFirehol, inFirehol } from "./lists";
 import { lookupLocalGeo, lookupLocalPrivacy } from "./local";
-import { fromIpWho, fromIpApiCom, fromRdap, dnsblScore, fromProxycheck, fromAbuseipdb, ptrCheck, prefixFirstSeen, neighborFlags, whoisCountry, threatfoxHit, sfsCheck, peerAsnInfo, classifyNetwork, type GeoSource } from "./geo";
+import { fromIpWho, fromIpApiCom, fromRdap, dnsblScore, fromProxycheck, fromAbuseipdb, ptrCheck, prefixFirstSeen, neighborFlags, whoisCountry, threatfoxHit, sfsCheck, peerAsnInfo, classifyNetwork, fromIp2LocationIo, fromIpInfoApi, type GeoSource } from "./geo";
 
 const PRIVATE_V4 = [/^10\./, /^127\./, /^0\./, /^169\.254\./, /^172\.(1[6-9]|2\d|3[01])\./, /^192\.168\./, /^2(2[4-9]|[34]\d)\./];
 export function isPrivateIp(ip: string): boolean {
@@ -33,7 +33,17 @@ export async function aggregateIp(rawIp: string): Promise<IntelResult> {
   }
 
   const failed: string[] = [];
-  const [tf, sfs, fhOk] = await Promise.all([threatfoxHit(ip).catch(() => null), sfsCheck(ip).catch(() => null), loadFirehol()]);
+  const ioKey = process.env.IP2LOCATION_IO_KEY;
+  const infoKey = process.env.IPINFO_TOKEN;
+  const [tf, sfs, fhOk, ip2l, ipinfo] = await Promise.all([
+    threatfoxHit(ip).catch(() => null),
+    sfsCheck(ip).catch(() => null),
+    loadFirehol(),
+    ioKey ? fromIp2LocationIo(ip, ioKey).catch(() => null) : null,
+    infoKey ? fromIpInfoApi(ip, infoKey).catch(() => null) : null,
+  ]);
+  if (ioKey && !ip2l) failed.push("ip2location.io");
+  if (infoKey && !ipinfo) failed.push("ipinfo");
   const settled = await Promise.allSettled([fromIpWho(ip), fromIpApiCom(ip), fromRdap(ip), getTorSet(), dnsblScore(ip), whoisCountry(ip).catch(() => null)]);
   const regCountry = settled[5].status === "fulfilled" ? (settled[5].value as string | null) : null;
   const who = settled[0].status === "fulfilled" ? (settled[0].value as GeoSource | undefined) : undefined;
@@ -63,7 +73,7 @@ export async function aggregateIp(rawIp: string): Promise<IntelResult> {
   const localPrivacy = lookupLocalPrivacy(ip);
 
   // geo 合并:国家取多数决(在线+本地),其余字段按优先级补
-  const votes = [who?.country_code, api?.country_code, ...localHits.map((h) => h.country)]
+  const votes = [who?.country_code, api?.country_code, ip2l?.country_code, ipinfo?.country_code, ...localHits.map((h) => h.country)]
     .filter((c): c is string => !!c)
     .map((c) => c.toUpperCase());
   const majority = votes.length ? votes.sort((a, b) => votes.filter((v) => v === b).length - votes.filter((v) => v === a).length)[0] : "";
@@ -98,6 +108,8 @@ export async function aggregateIp(rawIp: string): Promise<IntelResult> {
   const officialExit = /mullvad/.test(orgBlob) ? "mullvad" : /icloud private relay/.test(orgBlob) ? "icloud_relay" : null;
 
   const sources: string[] = ["ipwho.is", "ip-api.com"];
+  if (ip2l) sources.push("ip2location.io");
+  if (ipinfo) sources.push("ipinfo");
   if (rdap) sources.push("rdap.org");
   if (torSet) sources.push("tor");
   if (dnsblOk) sources.push("dnsbl");
@@ -119,11 +131,12 @@ export async function aggregateIp(rawIp: string): Promise<IntelResult> {
   for (const h of localPrivacy) sources.push(h.source);
 
   const anyPriv = (k: "vpn" | "proxy" | "hosting" | "tor") => localPrivacy.some((p) => p[k]);
+  const ip2lDch = typeof ip2l?.usageType === "string" && /DCH|SPX|SES/i.test(ip2l.usageType);
   const risk: IntelResult["risk"] = {
     is_vpn: anyPriv("vpn"),
-    is_proxy: !!api?.proxy || anyPriv("proxy"),
+    is_proxy: !!api?.proxy || !!ip2l?.proxy || anyPriv("proxy"),
     is_tor: torSet ? torSet.has(ip) : false || anyPriv("tor"),
-    is_datacenter: !!api?.hosting || anyPriv("hosting"),
+    is_datacenter: !!api?.hosting || ip2lDch || anyPriv("hosting"),
     is_residential_proxy: false,
     is_abuser: !!tf || !!sfs?.appears,
     official_exit: officialExit,
