@@ -85,3 +85,45 @@ scripts/update-local-dbs.sh
 npx vitest run        # 评分门控 / 九档网络分 / 环境信号纯函数
 npx tsc --noEmit
 ```
+
+## 参考与致谢
+
+本项目的检测思路与数据能力站在以下项目和服务的肩膀上。
+
+### 数据源
+
+| 提供方 | 用途 |
+|---|---|
+| [ipwho.is](https://ipwho.is) / [ip-api.com](https://ip-api.com) | IP 地理与网络信息 |
+| [RIPEstat](https://stat.ripe.net) | 注册国(RIPE Whois)与 BGP 前缀首次宣告时间 |
+| [rdap.org](https://rdap.org) | RDAP 注册数据 |
+| [Tor Project](https://check.torproject.org/torbulkexitlist) | 官方 Tor 出口列表 |
+| [Barracuda](https://www.barracudacentral.org) / [SORBS](http://www.sorbs.net) | DNSBL 黑名单查询 |
+| [FireHOL](https://github.com/firehol/blocklist-ipsets) | 聚合封锁列表(level1) |
+| [StopForumSpam](https://www.stopforumspam.com) | 垃圾注册 IP 记录 |
+| [abuse.ch ThreatFox](https://threatfox.abuse.ch) | 恶意 IoC 检索(端点变更中,静默降级) |
+| [DB-IP](https://db-ip.com) | City Lite 本地库(CC BY 4.0) |
+| [ip2region](https://github.com/lionsoul2014/ip2region)(MIT) | 中国境内定位精度 |
+| [Cloudflare](https://www.cloudflare.com/ips) | 官方 IP 段与 `cdn-cgi/trace` 边缘回显 |
+| Google / Cloudflare / Twilio STUN | WebRTC 泄漏检测 |
+| [proxycheck.io](https://proxycheck.io) / [AbuseIPDB](https://www.abuseipdb.com) / [MaxMind GeoLite2](https://www.maxmind.com) / [IPInfo](https://ipinfo.io) / [IP2Location](https://www.ip2location.com) | 可选增强源(env key) |
+
+### 开源库
+
+- [Next.js](https://nextjs.org) / [React](https://react.dev) — 框架
+- [Tailwind CSS](https://tailwindcss.com) — 样式
+- [lucide-react](https://lucide.dev) — 图标
+- [maxmind](https://github.com/runk/maxmind)(ISC) — mmdb 读取
+
+### 设计参考
+
+同类工具的公开实现与文档为本文档化过的检测项提供了大量灵感:
+
+- [MyIP](https://github.com/jason5ng32/MyIP) — IP 工具箱的功能布局,连通包 / 多源出口对照 / curl API / 报告导出
+- [dnsleaktest](https://github.com/macvk/dnsleaktest) — DNS 泄漏检测方法论
+- [claude-environment-check](https://github.com/TZZ520/claude-environment-check) — Claude 环境自检的检查项组织
+- [EgressScope](https://github.com/uruana33/egress-scope) — 出口诊断工作台的分区思路
+- [Patchright](https://github.com/Kaliiiiiiiiii-Vinyzu/patchright) — 自动化浏览器检测面的理解
+- [FingerprintJS](https://github.com/fingerprintjs/fingerprintjs) / [CreepJS](https://github.com/AbrahamJuliot/creepjs) — 浏览器环境信号(字体/时区/矛盾检测)
+
+评分权重、门控规则与界面文案为本项目自定义设计,详见 `specs/`。
