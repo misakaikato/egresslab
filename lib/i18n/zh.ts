@@ -409,3 +409,5 @@ zh.cardPage = { title: "签名卡", desc: "嵌入到个人主页/论坛签名/RE
 zh.echoMatrix = { title: "出口矩阵", desc: "7 个站点逐一回显,按出口 IP 分组,3 次采样中位延迟——每个网站看到的你是谁。", run: "运行矩阵探测", running: "探测中…", sites: "站点" };
 zh.recaptcha = { title: "reCAPTCHA v3 可信分", desc: "Google 行为评分(1.0=完全可信)。仅在点击后加载,平时不向 Google 发送任何数据。", run: "运行评分", failed: "评估失败(token 无效或服务端未配置 secret)", privacy: "点击=同意向 Google 发送本页行为数据;需 RECAPTCHA_V3_SITEKEY/SECRET 两个环境变量。" };
 zh.platform = { title: "平台预设", names: { claude: "Claude", openai: "OpenAI", media: "流媒体", tiktok: "TikTok" }, notes: { claude: "关注地区门控与 Cloudflare 信任;双端(网页+Code)同档案", openai: "与 Claude 同在 CF 后;关注机房型出口与账号注册画像", media: "流媒体解锁看住宅属性与原生性;机房多为 caution", tiktok: "机房容忍度最低的平台;注册即绑定区域,IP/时区/语言需自洽" } };
+
+zh.toolsBox = { title: "检测工具箱", desc: "按需手动触发:测速 / Turnstile 信任 / 出口矩阵 / 请求头等" };

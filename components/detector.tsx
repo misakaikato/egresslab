@@ -28,6 +28,7 @@ import InferenceCard from "./InferenceCard";
 import AdviceCard from "./AdviceCard";
 import { buildAdvice } from "@/lib/advice";
 import AccountCard from "./AccountCard";
+import ToolsCard from "./ToolsCard";
 import TurnstileCard from "./TurnstileCard";
 import SpeedCard from "./SpeedCard";
 import HeadersCard from "./HeadersCard";
@@ -496,6 +497,7 @@ export default function Detector({ locale }: { locale: string }) {
           {scans.length ? (
             <HistoryCard scans={scans} t={t.history} />
           ) : null}
+          <ToolsCard t={{ title: t.toolsBox.title, desc: t.toolsBox.desc, speed: t.speed, turnstile: t.turnstile, recaptcha: t.recaptcha, echoMatrix: t.echoMatrix, headers: t.headers }} toolsTitle="" turnstileKey={cfg?.turnstile ?? null} recaptchaKey={cfg?.recaptcha ?? null} targetIp={exitIp} />
         </div>
       ) : null}
 
