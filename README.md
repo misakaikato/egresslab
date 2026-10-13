@@ -125,5 +125,3 @@ npx tsc --noEmit
 - [EgressScope](https://github.com/uruana33/egress-scope) — 出口诊断工作台的分区思路
 - [Patchright](https://github.com/Kaliiiiiiiiii-Vinyzu/patchright) — 自动化浏览器检测面的理解
 - [FingerprintJS](https://github.com/fingerprintjs/fingerprintjs) / [CreepJS](https://github.com/AbrahamJuliot/creepjs) — 浏览器环境信号(字体/时区/矛盾检测)
-
-评分权重、门控规则与界面文案为本项目自定义设计,详见 `specs/`。
