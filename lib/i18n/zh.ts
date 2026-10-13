@@ -134,7 +134,7 @@ zh.path.h24 = "24h 国家切换";
 zh.path.h7d = "7 天切换";
 zh.path.trail = "国家轨迹";
 zh.path.times = "次";
-zh.export = { md: "导出 MD", json: "导出 JSON" };
+zh.export = { md: "复制 MD", json: "复制 JSON", copied: "已复制" };
 zh.ai = { title: "AI 服务连通包", desc: "主流 AI 平台可达性,全绿说明出口未被 AI 圈整体拉黑:", reachable: "可达" };
 
 zh.mode = { simple: "简明", pro: "专业" };

@@ -131,7 +131,7 @@ ja.path.h24 = "24h 国切替";
 ja.path.h7d = "7日間切替";
 ja.path.trail = "国の軌跡";
 ja.path.times = "回";
-ja.export = { md: "MD 出力", json: "JSON 出力" };
+ja.export = { md: "MD コピー", json: "JSON コピー", copied: "コピー済み" };
 ja.ai = { title: "AI サービス接続パック", desc: "主要 AI プラットフォームの到達性——全部緑なら出口は AI 業界全体でブラックリスト化されていません:", reachable: "到達可" };
 
 ja.mode = { simple: "かんたん", pro: "詳細" };

@@ -131,7 +131,7 @@ en.path.h24 = "Country switches 24h";
 en.path.h7d = "7-day switches";
 en.path.trail = "Country trail";
 en.path.times = "";
-en.export = { md: "Export MD", json: "Export JSON" };
+en.export = { md: "Copy MD", json: "Copy JSON", copied: "Copied" };
 en.ai = { title: "AI service pack", desc: "Reachability of major AI platforms — all green means the exit isn't blacklisted across the AI industry:", reachable: "reachable" };
 
 en.mode = { simple: "Simple", pro: "Expert" };

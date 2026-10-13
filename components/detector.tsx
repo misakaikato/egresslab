@@ -55,6 +55,7 @@ export default function Detector({ locale }: { locale: string }) {
   const [auto, setAuto] = useState<AutoInfo | null>(null);
   const [dnsCheck, setDns] = useState<DnsCheck | null>(null);
   const [dnsLeak, setDnsLeak] = useState<DnsLeakResult | null>(null);
+  const [copiedFmt, setCopiedFmt] = useState<"md" | "json" | null>(null);
   const [mode, setMode] = useState<"simple" | "pro">("simple");
   useEffect(() => {
     try { const v = localStorage.getItem("exitlens:view") ?? localStorage.getItem("egresslab:view"); if (v === "pro" || v === "simple") setMode(v); } catch {}
@@ -237,43 +238,65 @@ export default function Detector({ locale }: { locale: string }) {
     setScans(saveScan(rec));
   }, [phase, score, head, vCards]);
 
-  const exportReport = (fmt: "md" | "json") => {
+  const exportReport = async (fmt: "md" | "json") => {
     if (!score) return;
     const snap = {
+      tool: "ExitLens",
       ts: new Date().toISOString(),
       score: { total: score.score, level: score.level, coverage: score.coverage, gate: score.gate, region: score.region },
+      headline: head?.text,
       dimensions: score.dimensions.map((d) => ({ id: d.id, weight: d.weight, points: d.points, frac: d.frac, code: d.code })),
-      exits: { claude: claude?.ip || null, direct: distinctExits(direct.exits), v4: dual.v4?.ip || null, v6: dual.v6?.ip || null },
-      intel: intel ? { geo: intel.geo, network: intel.network, risk: intel.risk } : null,
-      webrtc: { status: webrtc.status, ips: webrtc.publicIps },
+      verdicts: vCards?.map((c) => ({ key: c.key, title: c.title, subtitle: c.subtitle, tone: c.tone })) ?? [],
+      conclusions: conclusions.map((c) => ({ id: c.id, title: c.title, subtitle: c.subtitle, confidence: c.confidence, evidence: c.evidence })),
+      advice: advices.map((a) => ({ tone: a.tone, title: a.title, detail: a.detail })),
+      probes: probes.map((p) => ({ host: p.host, status: p.status, ip: p.ip, country: p.country, warp: p.warp, colo: p.colo, ms: p.ms, challenged: p.challenged })),
+      exits: { claude: claude?.ip || null, direct: direct.exits.map((e) => `${e.ip}(${e.kind})`), v4: dual.v4 || null, v6: dual.v6 || null },
+      intel: intel ? { geo: intel.geo, network: intel.network, risk: intel.risk, meta: intel.meta } : null,
       dns: dnsCheck,
-      env: env ? { score: env.score, level: env.level, signals: env.items.map((i) => ({ k: i.key, score: i.score, value: i.value })) } : null,
+      dnsLeak: dnsLeak?.available ? { resolvers: dnsLeak.resolvers, mismatch: dnsLeak.mismatch } : null,
+      webrtc: { status: webrtc.status, ips: webrtc.publicIps },
+      env: env ? { score: env.score, level: env.level, signals: env.items.map((i) => ({ k: i.key, score: i.score, value: i.value })), platformSpoof: env.platformSpoof } : null,
+      fingerprint: fp ? { hash: fp.hash, entropyBits: fp.entropyBits, components: fp.components, lies: fp.lies, unavailable: fp.unavailable } : null,
       automation: auto,
       history: history ? { switches24h: history.switches24h, switches7d: history.switches7d, trail: history.trail } : null,
+      reputation: rep,
       aiPack: aiPack ? aiPack.map((p) => ({ host: p.host, ok: p.status === "ok", ms: p.ms, ip: p.ip, colo: p.colo })) : null,
     };
-    let blob: Blob;
+    let text: string;
     if (fmt === "json") {
-      blob = new Blob([JSON.stringify(snap, null, 2)], { type: "application/json" });
+      text = JSON.stringify(snap, null, 2);
     } else {
       const L: string[] = [];
       L.push(`# ExitLens 报告 · ${snap.ts}`);
       L.push(`\n**评分 ${score.score}/100 · ${score.level}${score.gate ? ` · gate: ${score.gate}` : ""} · 出口地区 ${score.region || "—"}**\n`);
       L.push(`| 维度 | 得分 | 判定 |\n|---|---|---|`);
       for (const d of snap.dimensions) L.push(`| ${d.id} | ${d.frac === null ? "N/A" : `${d.points}/${d.weight}`} | ${d.code} |`);
-      L.push(`\n## 出口\n- Claude: ${snap.exits.claude || "—"}\n- 直连: ${snap.exits.direct.join(", ") || "—"}\n- v4/v6: ${snap.exits.v4 || "—"} / ${snap.exits.v6 || "—"}`);
-      if (snap.intel?.risk) L.push(`\n## IP 情报\n- 类型: ${snap.intel.network?.asn_type} · ASN ${snap.intel.network?.asn} ${snap.intel.network?.asn_name}\n- 风险: VPN=${snap.intel.risk.is_vpn} 代理=${snap.intel.risk.is_proxy} 机房=${snap.intel.risk.is_datacenter} Tor=${snap.intel.risk.is_tor}\n- abuse=${snap.intel.risk.abuse_score} blacklist=${snap.intel.risk.blacklist_score} 前缀首见=${snap.intel.risk.prefix_first_seen || "—"}`);
+      if (snap.verdicts.length) { L.push(`\n## 状态`); for (const v of snap.verdicts) L.push(`- ${v.title} — ${v.subtitle}`); }
+      if (snap.conclusions.length) { L.push(`\n## 深度研判`); for (const c of snap.conclusions) L.push(`- [${c.confidence}] ${c.title} — ${c.subtitle}`); }
+      if (snap.advice.length) { L.push(`\n## 处置建议`); for (const a of snap.advice) L.push(`- (${a.tone}) ${a.title}${a.detail ? ` — ${a.detail}` : ""}`); }
+      L.push(`\n## 探测`); for (const p of snap.probes) L.push(`- ${p.host}: ${p.status}${p.ip ? ` ${p.ip} (${p.country})${p.warp === "on" ? " WARP" : ""}${p.ms ? ` ${p.ms}ms` : ""}${p.challenged ? " ⚠challenged" : ""}` : ""}`);
+      L.push(`\n## 出口\n- Claude: ${snap.exits.claude || "—"}\n- 直连: ${snap.exits.direct.join(", ") || "—"}\n- v4/v6: ${snap.exits.v4?.ip || "—"} / ${snap.exits.v6?.ip || "—"}`);
+      if (snap.intel?.risk) L.push(`\n## IP 情报\n- 类型: ${snap.intel.network?.asn_type} · ASN ${snap.intel.network?.asn} ${snap.intel.network?.asn_name}\n- 风险: VPN=${snap.intel.risk.is_vpn} 代理=${snap.intel.risk.is_proxy} 机房=${snap.intel.risk.is_datacenter} Tor=${snap.intel.risk.is_tor}\n- abuse=${snap.intel.risk.abuse_score} blacklist=${snap.intel.risk.blacklist_score} 前缀=${snap.intel.risk.prefix_first_seen || "—"}`);
+      if (snap.dnsLeak?.resolvers?.length) L.push(`\n## 真 DNS\n${snap.dnsLeak.resolvers.map((r) => `- ${r.ip} (${r.country})`).join("\n")}${snap.dnsLeak.mismatch ? "\n⚠ 与出口不同国" : ""}`);
       if (snap.env) L.push(`\n## 环境\n- 大陆特征 ${snap.env.score}/100 (${snap.env.level})`);
-      if (snap.history) L.push(`\n## 历史\n- 24h 切换 ${snap.history.switches24h} 次 · 7d ${snap.history.switches7d} 次 · 轨迹 ${snap.history.trail.join(" → ")}`);
+      if (snap.fingerprint) L.push(`\n## 指纹\n- ${snap.fingerprint.hash.slice(0, 16)} · 熵≈${snap.fingerprint.entropyBits}b · ${snap.fingerprint.components.length} 因子${snap.fingerprint.lies.length ? ` · 矛盾 ${snap.fingerprint.lies.length} 项` : ""}`);
+      if (snap.history) L.push(`\n## 历史\n- 24h 切换 ${snap.history.switches24h} · 7d ${snap.history.switches7d} · 轨迹 ${snap.history.trail.join(" → ")}`);
       if (snap.aiPack) L.push(`\n## AI 连通\n${snap.aiPack.map((a) => `- ${a.ok ? "✓" : "✗"} ${a.host}${a.ms ? ` ${a.ms}ms` : ""}`).join("\n")}`);
-      blob = new Blob([L.join("\n")], { type: "text/markdown" });
+      text = L.join("\n");
     }
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `exitlens-report-${Date.now()}.${fmt}`;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // 回退:execCommand(http 环境等)
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+    }
+    setCopiedFmt(fmt);
+    setTimeout(() => setCopiedFmt(null), 1600);
   };
 
   const steps = [t.steps.intel, t.steps.path, t.steps.reach, t.steps.leakEnv];
@@ -414,8 +437,8 @@ export default function Detector({ locale }: { locale: string }) {
         <div className="space-y-4">
           <HeadlineBand score={score.score} text={head.text} tone={head.tone as Tone} levelLabel={t.score.levels[score.level] ?? score.level} />
           <div className="flex justify-end gap-2">
-            <button onClick={() => exportReport("md")} className="pill card-hover cursor-pointer">{t.export.md}</button>
-            <button onClick={() => exportReport("json")} className="pill card-hover cursor-pointer">{t.export.json}</button>
+            <button onClick={() => exportReport("md")} className={`pill card-hover cursor-pointer ${copiedFmt === "md" ? "flash-good" : ""}`}>{copiedFmt === "md" ? t.export.copied : t.export.md}</button>
+            <button onClick={() => exportReport("json")} className={`pill card-hover cursor-pointer ${copiedFmt === "json" ? "flash-good" : ""}`}>{copiedFmt === "json" ? t.export.copied : t.export.json}</button>
           </div>
           <div className="grid md:grid-cols-2 gap-4 md:items-start stagger">
             {vCards.map((c) => (
@@ -483,8 +506,8 @@ export default function Detector({ locale }: { locale: string }) {
             <h2 className="text-sm font-semibold mb-4 flex items-center gap-2"><Radar size={15} className="text-accent" />{t.score.title}</h2>
             <DimensionBars dims={score.dimensions} labels={t.dims} codeLabels={t.dimCodes} />
             <div className="flex gap-2 mt-5">
-              <button onClick={() => exportReport("md")} className="pill card-hover cursor-pointer">{t.export.md}</button>
-              <button onClick={() => exportReport("json")} className="pill card-hover cursor-pointer">{t.export.json}</button>
+              <button onClick={() => exportReport("md")} className={`pill card-hover cursor-pointer ${copiedFmt === "md" ? "flash-good" : ""}`}>{copiedFmt === "md" ? t.export.copied : t.export.md}</button>
+              <button onClick={() => exportReport("json")} className={`pill card-hover cursor-pointer ${copiedFmt === "json" ? "flash-good" : ""}`}>{copiedFmt === "json" ? t.export.copied : t.export.json}</button>
             </div>
             {intelFailed ? <p className="text-[11px] text-muted mt-4">{t.err.intelFailed}</p> : null}
           </div>
