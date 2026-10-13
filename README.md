@@ -2,6 +2,18 @@
 
 Claude IP 风险自检工具:从 Claude 的视角检查你的网络出口与浏览器环境。
 
+## 界面预览
+
+| 检测进行中 | 简明视图(状态卡 + 深度研判) |
+| --- | --- |
+| ![进度](docs/screenshots/02-progress.png) | ![简明](docs/screenshots/03-simple-results.png) |
+
+| 专业视图(六维评分) | 深色主题 |
+| --- | --- |
+| ![专业](docs/screenshots/05-pro-view.png) | ![暗色](docs/screenshots/07-dark.png) |
+
+截图由 `scripts/screenshot.mjs` 自动生成(IP 已打码为文档地址);多语言见 [EN](docs/screenshots/06-en.png)。
+
 ## 快速开始
 
 ```bash
