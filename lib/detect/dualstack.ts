@@ -30,6 +30,32 @@ async function probeFamily(host: string, isV6: boolean): Promise<StackInfo | nul
   return { ip, country };
 }
 
+export interface ForcedFamily {
+  v4Forced: boolean; // v4-only 端点可达
+  v6Forced: boolean; // v6-only 端点可达
+  preferred: "IPv4" | "IPv6" | null; // 双栈可选时浏览器实际选择的族
+}
+
+// 强制族探测:api4/api6.ipify 只有单族记录,浏览器被迫走对应族
+// 偏好族:ipwho.is 返回的 type 字段反映实际连接族
+export async function probeForcedFamily(): Promise<ForcedFamily> {
+  const txt = async (u: string) => {
+    try {
+      const r = await fetch(u, { cache: "no-store", credentials: "omit", signal: AbortSignal.timeout(6000) });
+      return (await r.text()).trim();
+    } catch {
+      return "";
+    }
+  };
+  const [v4, v6, dual] = await Promise.all([txt("https://api4.ipify.org/"), txt("https://api6.ipify.org/"), txt("https://ipwho.is/")]);
+  let preferred: "IPv4" | "IPv6" | null = null;
+  try {
+    const j = JSON.parse(dual);
+    preferred = j?.type === "IPv6" ? "IPv6" : j?.type === "IPv4" ? "IPv4" : null;
+  } catch {}
+  return { v4Forced: /^\d+\.\d+\.\d+\.\d+$/.test(v4), v6Forced: v6.includes(":"), preferred };
+}
+
 export async function probeDualStack(): Promise<{ v4: StackInfo | null; v6: StackInfo | null }> {
   const [v4, v6] = await Promise.all([probeFamily("ipv4.icanhazip.com", false), probeFamily("ipv6.icanhazip.com", true)]);
   return { v4, v6 };

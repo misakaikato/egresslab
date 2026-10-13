@@ -393,3 +393,7 @@ en.billingMap = { individual_consumption_v2: "individual", claude_pro: "Pro", co
 en.account.kycMap = en.kycMap;
 en.account.trialMap = en.trialMap;
 en.account.billingMap = en.billingMap;
+
+en.turnstile = { title: "Cloudflare Turnstile trust", desc: "Claude sits behind Cloudflare — passing Turnstile silently is CF's direct verdict on your fingerprint and IP.", run: "Run check", running: "Checking…", silent: "Silent pass (trusted)", interactive: "Interaction required (flagged)", failed: "Failed", notConfigured: "TURNSTILE_SITEKEY not set: register a free Turnstile widget for this domain in the CF dashboard and set the env to enable." };
+en.speed = { title: "Cloudflare speed test", desc: "Official speed.cloudflare.com endpoints; global latency = probes → your exit IP (inbound view).", runSpeed: "Speed test", runPing: "Global latency", down: "Down", up: "Up", latency: "Edge RTT", note: "Uses ~24MB per run; inbound latency measures to the exit, not your machine." };
+en.headers = { title: "Headers (as servers see)", desc: "Headers any site can read; header order is a build-level fingerprint.", expand: "Expand", collapse: "Collapse", loading: "Loading…", order: "Order" };

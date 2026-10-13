@@ -7,5 +7,7 @@ export async function GET() {
   return NextResponse.json({
     ok: true,
     dnsleak: zone && api ? { zone, api } : null,
+    turnstile: process.env.TURNSTILE_SITEKEY || null,
+    recaptcha: process.env.RECAPTCHA_V3_SITEKEY || null,
   });
 }

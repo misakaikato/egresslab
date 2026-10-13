@@ -28,6 +28,9 @@ import InferenceCard from "./InferenceCard";
 import AdviceCard from "./AdviceCard";
 import { buildAdvice } from "@/lib/advice";
 import AccountCard from "./AccountCard";
+import TurnstileCard from "./TurnstileCard";
+import SpeedCard from "./SpeedCard";
+import HeadersCard from "./HeadersCard";
 import { inferConclusions } from "@/lib/inference";
 import FingerprintPanel from "./FingerprintPanel";
 import { buildVerdicts, headline, type Tone } from "@/lib/verdicts";
@@ -56,6 +59,7 @@ export default function Detector({ locale }: { locale: string }) {
   const [dnsCheck, setDns] = useState<DnsCheck | null>(null);
   const [dnsLeak, setDnsLeak] = useState<DnsLeakResult | null>(null);
   const [copiedFmt, setCopiedFmt] = useState<"md" | "json" | null>(null);
+  const [cfg, setCfg] = useState<{ turnstile: string | null; recaptcha: string | null } | null>(null);
   const [mode, setMode] = useState<"simple" | "pro">("simple");
   useEffect(() => {
     try { const v = localStorage.getItem("exitlens:view") ?? localStorage.getItem("egresslab:view"); if (v === "pro" || v === "simple") setMode(v); } catch {}
@@ -70,6 +74,10 @@ export default function Detector({ locale }: { locale: string }) {
   const [status, setStatus] = useState<{ indicator: string; description: string; components: { name: string; status: string }[]; fetched_at: string } | null>(null);
   const [statusOpen, setStatusOpen] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    fetch("/api/config", { cache: "no-store" }).then((r) => r.json()).then((j) => setCfg({ turnstile: j?.turnstile || null, recaptcha: j?.recaptcha || null })).catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch("/api/claude/status").then((r) => r.json()).then((j) => { if (j?.ok) setStatus({ indicator: j.indicator, description: j.description, components: j.components || [], fetched_at: j.fetched_at }); }).catch(() => {});
