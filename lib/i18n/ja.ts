@@ -203,3 +203,6 @@ ja.fp = {
 };
 
 ja.statusLevels = { none: "全正常", minor: "軽微な障害", major: "部分的障害", critical: "重大障害", maintenance: "メンテナンス", unknown: "不明" };
+
+ja.compStatus = { operational: "正常稼働", degraded_performance: "性能低下", partial_outage: "部分障害", major_outage: "重大障害", maintenance: "メンテナンス", offline: "オフライン" };
+ja.compUpdated = "更新 {t}";

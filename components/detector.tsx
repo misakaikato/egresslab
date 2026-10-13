@@ -26,7 +26,7 @@ import HistoryCard from "./HistoryCard";
 import FingerprintPanel from "./FingerprintPanel";
 import { buildVerdicts, headline, type Tone } from "@/lib/verdicts";
 import { HeadlineBand, VerdictCard } from "./VerdictCard";
-import { Play, RotateCw, TerminalSquare, Copy, Check, Activity, Map, Radar, Fingerprint, Server } from "lucide-react";
+import { Play, RotateCw, TerminalSquare, Copy, Check, Activity, Map, Radar, Fingerprint, Server, ChevronDown } from "lucide-react";
 
 type Phase = "idle" | "running" | "done";
 interface AutoInfo { webdriver: boolean; cookie: boolean; webglRenderer: string; swiftShader: boolean }
@@ -54,10 +54,11 @@ export default function Detector({ locale }: { locale: string }) {
   }, []);
   const switchMode = (m: "simple" | "pro") => { setMode(m); try { localStorage.setItem("egresslab:view", m); } catch {} };
   const [rep, setRep] = useState<RepData | null>(null);
-  const [status, setStatus] = useState<{ indicator: string; description: string } | null>(null);
+  const [status, setStatus] = useState<{ indicator: string; description: string; components: { name: string; status: string }[]; fetched_at: string } | null>(null);
+  const [statusOpen, setStatusOpen] = useState(false);
 
   useEffect(() => {
-    fetch("/api/claude/status").then((r) => r.json()).then((j) => j?.ok && setStatus({ indicator: j.indicator, description: j.description })).catch(() => {});
+    fetch("/api/claude/status").then((r) => r.json()).then((j) => { if (j?.ok) setStatus({ indicator: j.indicator, description: j.description, components: j.components || [], fetched_at: j.fetched_at }); }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -239,12 +240,42 @@ export default function Detector({ locale }: { locale: string }) {
             {busy ? t.hero.testing : phase === "done" ? t.hero.rescan : t.hero.start}
           </button>
           {status ? (
-            <span
-              className="pill"
-              title={status.description}
-              style={status.indicator !== "none" && status.indicator !== "unknown" ? { borderColor: "var(--warn)", color: "var(--warn)" } : undefined}
-            >
-              {t.hero.officialStatus}: {(t.statusLevels && t.statusLevels[status.indicator]) || status.indicator}
+            <span className="relative inline-block">
+              <button
+                className="pill cursor-pointer card-hover"
+                onClick={() => setStatusOpen(!statusOpen)}
+                style={status.indicator !== "none" && status.indicator !== "unknown" ? { borderColor: "var(--warn)", color: "var(--warn)" } : undefined}
+              >
+                {(t.statusLevels && t.statusLevels[status.indicator]) || status.indicator}
+                <ChevronDown size={12} className={`transition-transform ${statusOpen ? "rotate-180" : ""}`} />
+              </button>
+              {statusOpen ? (
+                <>
+                  <button className="fixed inset-0 z-40 cursor-default" aria-label="close" onClick={() => setStatusOpen(false)} />
+                  <div className="absolute z-50 mt-2 left-1/2 -translate-x-1/2 w-72 card p-4 text-left fade-in" style={{ background: "var(--surface)" }}>
+                    <div className="flex items-baseline justify-between mb-3">
+                      <b className="text-[13px]">{t.hero.officialStatus}</b>
+                      <span className="text-[10.5px] text-muted">{t.compUpdated.replace("{t}", new Date(status.fetched_at).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }))}</span>
+                    </div>
+                    <p className="text-[11.5px] text-muted mb-3 leading-relaxed">{status.description}</p>
+                    <div className="space-y-2">
+                      {status.components.map((c) => {
+                        const tone = c.status === "operational" ? "var(--good)" : c.status === "degraded_performance" ? "var(--warn)" : ["partial_outage", "major_outage", "offline"].includes(c.status) ? "var(--bad)" : "var(--accent)";
+                        return (
+                          <div key={c.name} className="flex items-center justify-between gap-2 text-[12px]">
+                            <span className="mono truncate">{c.name}</span>
+                            <span className="flex items-center gap-1.5 shrink-0" style={{ color: tone }}>
+                              <span className="w-1.5 h-1.5 rounded-full" style={{ background: tone }} />
+                              {(t.compStatus && t.compStatus[c.status]) || c.status}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[10px] text-muted mt-3 pt-2 border-t border-line">status.anthropic.com · 5 min cache</p>
+                  </div>
+                </>
+              ) : null}
             </span>
           ) : null}
         </div>

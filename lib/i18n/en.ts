@@ -203,3 +203,6 @@ en.fp = {
 };
 
 en.statusLevels = { none: "All systems go", minor: "Minor outage", major: "Major outage", critical: "Critical", maintenance: "Maintenance", unknown: "Unknown" };
+
+en.compStatus = { operational: "Operational", degraded_performance: "Degraded", partial_outage: "Partial outage", major_outage: "Major outage", maintenance: "Maintenance", offline: "Offline" };
+en.compUpdated = "Updated {t}";

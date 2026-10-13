@@ -206,3 +206,6 @@ zh.fp = {
 };
 
 zh.statusLevels = { none: "全部正常", minor: "轻微故障", major: "部分中断", critical: "严重故障", maintenance: "维护中", unknown: "未知" };
+
+zh.compStatus = { operational: "正常运行", degraded_performance: "性能降级", partial_outage: "部分中断", major_outage: "严重中断", maintenance: "维护中", offline: "离线" };
+zh.compUpdated = "更新于 {t}";
