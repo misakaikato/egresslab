@@ -403,3 +403,5 @@ zh.account.billingMap = zh.billingMap;
 zh.turnstile = { title: "Cloudflare Turnstile 信任", desc: "Claude 就在 Cloudflare 后面——能否无感通过 Turnstile,是 CF 对你指纹与 IP 的直接表态。", run: "运行检测", running: "检测中…", silent: "无感通过(高信任)", interactive: "需要交互(边缘存疑)", failed: "未通过", notConfigured: "未配置 TURNSTILE_SITEKEY:在 Cloudflare 面板为本站域名免费注册 Turnstile 后,环境变量填入 sitekey 即启用。" };
 zh.speed = { title: "Cloudflare 测速", desc: "speed.cloudflare.com 官方端点;全球延迟为各地探针到出口 IP 的入站视角。", runSpeed: "测速", runPing: "全球延迟", down: "下行", up: "上行", latency: "边缘延迟", note: "测速消耗流量(约 24MB/次);入站延迟测的是到出口,非到本机。" };
 zh.headers = { title: "请求头(服务器所见)", desc: "任意站点能读到的请求头;头序是浏览器构建级指纹。", expand: "展开", collapse: "收起", loading: "读取中…", order: "头序" };
+
+zh.cardPage = { title: "签名卡", desc: "嵌入到个人主页/论坛签名/README:每位访客看到自己的 IP、归属与评分。", refresh: "刷新预览", theme: "主题", size: "宽度", ipMode: { title: "显示的 IP", visitor: "访客自己的 IP", specified: "指定 IP" }, embed: "嵌入代码", crawlerNote: "GitHub/Discord/Telegram 等平台由服务器代为加载图片,看不到访客 IP——卡片会显示占位提示。在这些平台请用「指定 IP」模式。" };

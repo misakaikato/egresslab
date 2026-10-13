@@ -397,3 +397,5 @@ ja.account.billingMap = ja.billingMap;
 ja.turnstile = { title: "Cloudflare Turnstile 信頼", desc: "Claude は CF 背後にあり——Turnstile を無感覚で通過できるかは CF の直接評価。", run: "検査実行", running: "検査中…", silent: "無感覚通過(高信頼)", interactive: "操作必要(要注意)", failed: "未通過", notConfigured: "TURNSTILE_SITEKEY 未設定:CF パネルで無料登録して env に設定すると有効化。" };
 ja.speed = { title: "Cloudflare スピードテスト", desc: "公式 speed.cloudflare.com;全球遅延は出口 IP へのインバウンド視点。", runSpeed: "測定", runPing: "全球遅延", down: "下り", up: "上り", latency: "エッジ RTT", note: "1 回約 24MB 消費;インバウンド遅延は出口まで。" };
 ja.headers = { title: "リクエストヘッダ(サーバー視点)", desc: "任意サイトが読めるヘッダ;順序はビルド級指紋。", expand: "展開", collapse: "折りたたみ", loading: "読込中…", order: "順序" };
+
+ja.cardPage = { title: "署名カード", desc: "ホームページ・フォーラム署名・README に埋め込むと、訪問者は自分の IP とスコアを見られます。", refresh: "更新", theme: "テーマ", size: "幅", ipMode: { title: "表示 IP", visitor: "訪問者自身の IP", specified: "指定 IP" }, embed: "埋め込みコード", crawlerNote: "GitHub/Discord/Telegram はサーバー経由で画像を取得するため訪問者 IP 不可——プレースホルダー表示。それらの平台では「指定 IP」を。" };

@@ -32,7 +32,11 @@ export default async function LocaleLayout({ children, params }: { children: Rea
         <header className="sticky top-0 z-40 backdrop-blur border-b border-line" style={{ background: "color-mix(in srgb, var(--bg) 82%, transparent)" }}>
           <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between">
             <div className="flex items-baseline gap-2.5">
-              <span className="text-ink flex items-center gap-1.5 -translate-y-px"><Logo size={20} /><span className="font-display text-lg font-bold tracking-tight">ExitLens</span></span>
+              <a href={`/${locale}`} className="text-ink flex items-center gap-1.5 -translate-y-px hover:opacity-80">
+                <Logo size={20} />
+                <span className="font-display text-lg font-bold tracking-tight">ExitLens</span>
+              </a>
+              <a href={`/${locale}/card`} className="text-xs text-muted hover:text-accent hidden sm:inline">{dict(locale).cardPage.title}</a>
               <span className="text-xs text-muted hidden sm:inline">{dict(locale).nav.tag}</span>
             </div>
             <div className="flex items-center gap-2">
