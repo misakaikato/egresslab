@@ -6,7 +6,7 @@ function parseTrace(text: string, key: string): string {
   return m?.[1]?.trim() || "";
 }
 
-function faviconReachable(host: string, timeoutMs: number): Promise<boolean> {
+function faviconReachable(host: string, timeoutMs: number, probePath = "/favicon.ico"): Promise<boolean> {
   return new Promise((resolve) => {
     const t0 = performance.now();
     const img = new Image();
@@ -20,12 +20,12 @@ function faviconReachable(host: string, timeoutMs: number): Promise<boolean> {
     const timer = setTimeout(() => finish(false), timeoutMs);
     img.onload = () => finish(true);
     img.onerror = () => finish(true); // 404 也证明可连通
-    img.src = `https://${host}/favicon.ico?_t=${Date.now()}`;
+    img.src = `https://${host}${probePath}?_t=${Date.now()}`;
     void t0;
   });
 }
 
-export async function probeTrace(host: string, timeoutMs = 12000): Promise<TraceProbe> {
+export async function probeTrace(host: string, timeoutMs = 12000, probePath?: string): Promise<TraceProbe> {
   const out: TraceProbe = { host, status: "pending", ip: "", country: "", warp: "", colo: "", ms: 0, fallback: false, httpStatus: 0, challenged: false };
   const t0 = performance.now();
   try {
@@ -51,7 +51,7 @@ export async function probeTrace(host: string, timeoutMs = 12000): Promise<Trace
     return out;
   } catch {
     out.fallback = true;
-    const reachable = await faviconReachable(host, 6000);
+    const reachable = await faviconReachable(host, 6000, probePath);
     out.ms = Math.round(performance.now() - t0);
     out.status = reachable ? "ok" : "failed";
     return out;

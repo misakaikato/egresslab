@@ -3,6 +3,7 @@ import { aggregateIp } from "./intel/aggregate";
 import { recordCheck } from "./reputation";
 import { queryHoneypot } from "./honeypot";
 import { computeScore } from "../score";
+import { sceneScores } from "./scenarios";
 import { buildVerdicts, headline } from "../verdicts";
 import { dict } from "../i18n/config";
 import type { IntelResult, ScoreInput } from "../types";
@@ -23,6 +24,7 @@ export interface AssessResult {
   headline: string | null;
   verdicts: { key: string; title: string; subtitle: string }[];
   honeypot: { known: boolean; hits: number } | null;
+  scenes?: import("./scenarios").SceneScore[];
 }
 
 const COVERAGE_NOTE = {
@@ -79,6 +81,7 @@ export async function assessIp(rawIp: string, lang = "zh"): Promise<AssessResult
     .map((c) => ({ key: c.key, title: c.title, subtitle: c.subtitle }));
   const hp = queryHoneypot(ip);
   base.honeypot = { known: hp.known, hits: hp.hits };
+  base.scenes = sceneScores(intel);
   recordCheck(ip, score.score, JSON.stringify({ v: 1, risk: intel.risk?.sources }));
   return base;
 }

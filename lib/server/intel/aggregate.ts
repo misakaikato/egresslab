@@ -3,7 +3,8 @@ import type { IntelResult } from "../../types";
 import { getDb, dbTry } from "../db";
 import { getTorSet, loadFirehol, inFirehol } from "./lists";
 import { lookupLocalGeo, lookupLocalPrivacy } from "./local";
-import { fromIpWho, fromIpApiCom, fromRdap, dnsblScore, fromProxycheck, fromAbuseipdb, ptrCheck, prefixFirstSeen, neighborFlags, whoisCountry, threatfoxHit, sfsCheck, peerAsnInfo, classifyNetwork, fromIp2LocationIo, fromIpInfoApi, type GeoSource } from "./geo";
+import { computeTrust } from "../trust";
+import { fromIpWho, fromIpApiCom, fromRdap, dnsblScore, fromProxycheck, fromAbuseipdb, ptrCheck, prefixFirstSeen, neighborFlags, whoisCountry, threatfoxHit, sfsCheck, peerAsnInfo, classifyNetwork, fromIp2LocationIo, fromIpInfoApi, asnOverview, asnUpstreams, type GeoSource } from "./geo";
 
 const PRIVATE_V4 = [/^10\./, /^127\./, /^0\./, /^169\.254\./, /^172\.(1[6-9]|2\d|3[01])\./, /^192\.168\./, /^2(2[4-9]|[34]\d)\./];
 export function isPrivateIp(ip: string): boolean {
@@ -29,6 +30,7 @@ export async function aggregateIp(rawIp: string): Promise<IntelResult> {
   );
   if (cached && Date.now() - cached.ts < CACHE_TTL) {
     const j = JSON.parse(cached.json) as IntelResult;
+    if (!j.trust) j.trust = computeTrust(j) ?? undefined; // 旧缓存补算
     return { ...j, meta: { ...j.meta, cached: true, age_ms: Date.now() - cached.ts } };
   }
 
@@ -50,7 +52,7 @@ export async function aggregateIp(rawIp: string): Promise<IntelResult> {
   const api = settled[1].status === "fulfilled" ? (settled[1].value as Awaited<ReturnType<typeof fromIpApiCom>> | undefined) : undefined;
   const rdap = settled[2].status === "fulfilled" ? (settled[2].value as GeoSource | undefined) : undefined;
   const torSet = settled[3].status === "fulfilled" ? (settled[3].value as Set<string> | undefined) : undefined;
-  const dnsbl = settled[4].status === "fulfilled" ? (settled[4].value as { score: number; hitZones: string[] } | undefined) : undefined;
+  const dnsbl = settled[4].status === "fulfilled" ? (settled[4].value as { score: number; hitZones: string[]; detail?: import("./geo").DnsblHit[] } | undefined) : undefined;
   if (settled[0].status === "rejected") failed.push("ipwho.is");
   if (settled[1].status === "rejected") failed.push("ip-api.com");
   if (settled[2].status === "rejected") failed.push("rdap.org");
@@ -63,6 +65,7 @@ export async function aggregateIp(rawIp: string): Promise<IntelResult> {
   if (!who && !api) {
     if (cached) {
       const j = JSON.parse(cached.json) as IntelResult;
+      if (!j.trust) j.trust = computeTrust(j) ?? undefined;
       return { ...j, meta: { ...j.meta, cached: true, age_ms: Date.now() - cached.ts } };
     }
     throw Object.assign(new Error("all_sources_failed"), { statusCode: 502 });
@@ -80,7 +83,7 @@ export async function aggregateIp(rawIp: string): Promise<IntelResult> {
   const localTz = localHits.find((h) => h.timezone);
   const localCity = localHits.find((h) => h.city && h.source === "ip2region") || localHits.find((h) => h.city);
   const localAsn = localHits.find((h) => h.asn);
-  const geo = {
+  const geo: IntelResult["geo"] = {
     country_code: majority || who?.country_code || api?.country_code || "",
     country_en: who?.country_en || api?.country_en || "",
     city: who?.city || api?.city || localCity?.city || "",
@@ -88,6 +91,37 @@ export async function aggregateIp(rawIp: string): Promise<IntelResult> {
     latitude: who?.latitude ?? api?.latitude ?? null,
     longitude: who?.longitude ?? api?.longitude ?? null,
   };
+  // 多源定位对比:各源国家/城市/坐标并列 + 最大偏移距离(haversine)
+  const haversineKm = (aLat: number, aLon: number, bLat: number, bLon: number) => {
+    const R = 6371, rad = (x: number) => (x * Math.PI) / 180;
+    const dLat = rad(bLat - aLat), dLon = rad(bLon - aLon);
+    const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(aLat)) * Math.cos(rad(bLat)) * Math.sin(dLon / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(h));
+  };
+  const geoSourcePairs: [string, GeoSource | undefined | null][] = [
+    ["ipwho.is", who],
+    ["ip-api.com", api],
+    ["ip2location.io", ip2l],
+    ["ipinfo", ipinfo],
+  ];
+  const geoSources = geoSourcePairs
+    .filter((kv): kv is [string, GeoSource] => kv[1] != null)
+    .map(([source, g]) => ({
+      source,
+      country: g.country_en || g.country_code || "",
+      city: g.city || "",
+      latitude: typeof g.latitude === "number" ? g.latitude : null,
+      longitude: typeof g.longitude === "number" ? g.longitude : null,
+    }));
+  const withCoord = geoSources.filter((s) => s.latitude !== null && s.longitude !== null);
+  let maxDist = 0;
+  for (let i = 0; i < withCoord.length; i++)
+    for (let j = i + 1; j < withCoord.length; j++)
+      maxDist = Math.max(maxDist, haversineKm(withCoord[i].latitude!, withCoord[i].longitude!, withCoord[j].latitude!, withCoord[j].longitude!));
+  if (geoSources.length >= 2) {
+    geo.sources = geoSources;
+    if (withCoord.length >= 2) geo.max_distance_km = Math.round(maxDist);
+  }
   const network: IntelResult["network"] = {
     asn: who?.asn ?? api?.asn ?? localAsn?.asn ?? null,
     asn_name: who?.asn_name || api?.asn_name || localAsn?.asnName || "",
@@ -96,12 +130,18 @@ export async function aggregateIp(rawIp: string): Promise<IntelResult> {
   };
   // PeeringDB 综合分类:ip-api 旗标对一级转接商(GTT 等)失效,PeeringDB NSP+关键词补判
   if (network.asn) {
-    const pdb = await peerAsnInfo(network.asn).catch(() => null);
+    const [pdb, ov, ups] = await Promise.all([
+      peerAsnInfo(network.asn).catch(() => null),
+      asnOverview(network.asn).catch(() => null),
+      asnUpstreams(network.asn).catch(() => null),
+    ]);
     if (pdb) {
       const cls = classifyNetwork({ hosting: !!api?.hosting, mobile: !!api?.mobile, asnName: network.asn_name || "", pdb });
       network.asn_type = cls.type;
       network.pdb_type = cls.pdbType || "";
     }
+    if (ov) network.asn_detail = { holder: ov.holder, prefixes_v4: ov.prefixes_v4, prefixes_v6: ov.prefixes_v6 };
+    if (ups) network.upstreams = ups;
   }
 
   const orgBlob = `${network.asn_name} ${network.isp} ${rdap?.org || ""}`.toLowerCase();
@@ -116,6 +156,7 @@ export async function aggregateIp(rawIp: string): Promise<IntelResult> {
   if (network.pdb_type) sources.push("peeringdb");
   if (tf !== null) sources.push("threatfox");
   if (sfs !== null) sources.push("sfs");
+  if (network.asn_detail || network.upstreams) sources.push("ripestat");
 
   // 黑名单合成:dnsbl(50/区)/firehol(70)/threatfox(60)/sfs(40),取最大
   let blacklist = dnsblOk ? (dnsbl?.score ?? 0) : 0;
@@ -142,6 +183,7 @@ export async function aggregateIp(rawIp: string): Promise<IntelResult> {
     official_exit: officialExit,
     abuse_score: 0,
     blacklist_score: blacklist,
+    dnsbl_detail: dnsbl?.detail,
     sources,
   };
 
@@ -155,7 +197,12 @@ export async function aggregateIp(rawIp: string): Promise<IntelResult> {
   // 服务端免费增强:PTR 一致性 / 前缀年龄 / 邻居采样(并行,失败静默)
   const pcKeyEarly = process.env.PROXYCHECK_API_KEY ? fromProxycheck(ip, process.env.PROXYCHECK_API_KEY).catch(() => null) : null;
   const abKeyEarly = process.env.ABUSEIPDB_API_KEY ? fromAbuseipdb(ip, process.env.ABUSEIPDB_API_KEY).catch(() => null) : null;
-  const [ptr, firstSeen, neighbors, pcEarly, abEarly] = await Promise.all([ptrCheck(ip).catch(() => null), prefixFirstSeen(ip).catch(() => null), neighborFlags(ip).catch(() => null), pcKeyEarly, abKeyEarly]);
+  const { scanPorts } = await import("../ports");
+  const [ptr, firstSeen, neighbors, pcEarly, abEarly, openPorts] = await Promise.all([ptrCheck(ip).catch(() => null), prefixFirstSeen(ip).catch(() => null), neighborFlags(ip).catch(() => null), pcKeyEarly, abKeyEarly, scanPorts(ip).catch(() => null)]);
+  if (openPorts !== null && openPorts !== undefined) {
+    risk.open_ports = openPorts;
+    sources.push("portscan");
+  }
   if (ptr) network.ptr = ptr as any;
   if (firstSeen) risk.prefix_first_seen = firstSeen;
   if (neighbors) risk.neighbors_flagged = neighbors.flagged;
@@ -181,6 +228,7 @@ export async function aggregateIp(rawIp: string): Promise<IntelResult> {
     ok: true, ip, private: false, geo, network, risk,
     meta: { cached: false, age_ms: 0, sources_ok: sources.length, sources_failed: failed },
   };
+  result.trust = computeTrust(result) ?? undefined;
   dbTry(() => {
     d.prepare("INSERT INTO intel_cache(key,ts,ttl_ms,json) VALUES(?,?,?,?) ON CONFLICT(key) DO UPDATE SET ts=excluded.ts, json=excluded.json")
       .run(cacheKey, Date.now(), CACHE_TTL, JSON.stringify(result));

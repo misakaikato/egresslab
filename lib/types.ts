@@ -21,6 +21,8 @@ export interface IntelGeo {
   timezone: string;
   latitude: number | null;
   longitude: number | null;
+  sources?: { source: string; country: string; city: string; latitude: number | null; longitude: number | null }[]; // 多源定位对比
+  max_distance_km?: number; // 各源坐标间最大偏移(城市级库打架=风险信号)
 }
 
 export interface IntelNetwork {
@@ -31,6 +33,8 @@ export interface IntelNetwork {
   ptr?: { host: string; match: boolean | null }; // 正反向 DNS 一致性
   native?: boolean | null; // 原生 IP:注册国=定位国
   pdb_type?: string; // PeeringDB 分类(NSP/ISP/Content...)
+  asn_detail?: { holder: string; prefixes_v4: number; prefixes_v6: number }; // RIPEstat as-overview
+  upstreams?: { asn: number; name: string; share: number; tier1: boolean }[]; // BGP 直接上游,share 为百分比
 }
 
 export interface IntelRisk {
@@ -45,7 +49,21 @@ export interface IntelRisk {
   blacklist_score: number; // 0-100
   prefix_first_seen?: string | null; // BGP 前缀首次宣告(RIPEstat)
   neighbors_flagged?: number; // 同 /24 邻居被标记数
+  dnsbl_detail?: { zone: string; name: string; cat: string; listed: boolean; ms: number }[]; // 12 区 DNSBL 明细
+  open_ports?: number[] | null; // 常见端口探测(自托管启用;null=未测)
   sources: string[];
+}
+
+export interface TrustFactor {
+  key: string; // i18n 键:tor / proxy / vpn / datacenter / abuse / blacklist ...
+  delta: number; // 扣分(正数)
+  value?: string; // 附带值(如 abuse 分数)
+}
+
+export interface TrustResult {
+  score: number; // 0-100,越高越纯净
+  grade: "pure" | "good" | "fair" | "poor" | "bad";
+  factors: TrustFactor[];
 }
 
 export interface IntelResult {
@@ -55,6 +73,7 @@ export interface IntelResult {
   geo: Partial<IntelGeo>;
   network: Partial<IntelNetwork>;
   risk: Partial<IntelRisk>;
+  trust?: TrustResult; // 单值纯净度评分(服务端聚合后计算)
   meta: { cached: boolean; age_ms: number; sources_ok: number; sources_failed: string[] };
 }
 

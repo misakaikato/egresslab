@@ -416,3 +416,47 @@ en.ipPage = { queryBtn: "Look up", unsupported: "region unsupported", intelTitle
 en.share = { btn: "Share link", copied: "Link copied", readonly: "Shared read-only", title: "ExitLens Report" };
 
 en.scoringPage = { title: "How scoring works", intro: "Total is a weighted average of six dimensions (0-100, higher is safer); weights and gates are this project's own design. The score reflects the network and browser environment exposed by this visit — not the account, and not any platform's official verdict.", dimsTitle: "Dimension weights", gatesTitle: "Hard gates (override weighting)", g1: "Exit region outside Anthropic's supported list → 0 (region-blocked)", g2: "claude.ai unreachable → capped at 30", g3: "Edge-challenged by Cloudflare / region conflict → capped at 60 / 45", levelsTitle: "Level thresholds", coverageNote: "Untested dimensions are excluded from the denominator; below 85% coverage the best level is watch.", srcTitle: "Data sources" };
+
+en.matrix = {
+  title: "Per-site egress split test",
+  desc: "Probes 40+ Cloudflare-fronted sites via /cdn-cgi/trace to reveal which exit IP each website sees — different IPs across sites prove split routing; non-CF sites are reachability-only.",
+  exitSummary: "{n} distinct exits found (click to inspect IP quality)",
+  clickIp: "Inspect this IP's intel and score",
+  cats: { cn: "China direct", ai: "AI", social: "Social", crypto: "Crypto", tools: "Tools/SaaS", static: "Static CDN", dev: "Dev", media: "Media", speed: "Cloudflare nets" },
+  noIp: "reachable (non-CF)",
+  pending: "pending",
+  unreachable: "unreachable",
+  footnote: "{ok}/{total} sites reachable, {traced} echoed an exit IP. The more sites share one exit IP, the broader that exit's share of your routing rules.",
+};
+
+en.trust = {
+  title: "IP purity",
+  hint: "0-100, higher is cleaner; weighted deductions from VPN/proxy/Tor/datacenter/abuse/blacklist/neighbor/native signals",
+  grades: { pure: "Pure", good: "Good", fair: "Fair", poor: "Poor", bad: "High risk" },
+  clean: "No deductions found",
+  factors: {
+    tor: "Tor exit", resproxy: "Residential proxy", proxy: "Open proxy", vpn: "VPN", officialExit: "Public relay service",
+    datacenter: "Datacenter IP", asnHosting: "Hosting/transit ASN", abuser: "Abuse reports", abuse: "Abuse score",
+    blacklist: "Blacklist hits", neighbors: "Flagged /24 neighbors", nonNative: "Non-native IP", freshPrefix: "Recently announced prefix",
+  },
+};
+
+en.dnsbl = { title: "Global threat & spam blacklists (DNSBL)", listed: "Listed", clean: "Clean", cats: { spam: "Spam", reputation: "Reputation", botnet: "Botnet", malware: "Malware", proxy: "Proxy/Tor" }, summary: "{total} zones · {hit} listed" };
+
+en.scenes = { title: "Scenario fit", note: "0-10, higher is better; inferred from IP type, nativeness and reputation — not an official platform verdict", ids: { ai: "AI apps", social: "Social media ops", tiktok: "TikTok" }, grades: { excellent: "Excellent", recommended: "Recommended", usable: "Usable", marginal: "Marginal", notRecommended: "Not recommended" } };
+
+en.bgp = { title: "BGP routing topology", holder: "ASN holder", prefixes: "Announced prefixes", upstreams: "Direct upstreams (path share)", tier1: "Tier 1 backbone", noData: "No BGP observations", src: "Source: RIPEstat RIS probes" };
+
+en.geoCmp = { title: "Geolocation (multi-source)", maxOffset: "Max offset", km: "km", note: "City-level disagreement between databases is normal; large offsets or country mismatches signal anycast/broadcast or rerouted space" };
+
+en.ports = { label: "Open ports", none: "No common ports open", off: "Not probed (off by default: local proxies make every port appear open; meaningful only on direct unproxied servers — enable with PORTSCAN=1)", hint: "Residential/clean exit IPs should close common ports like SSH 22 to avoid being fingerprinted as servers" };
+
+en.conn = { title: "Connectivity", desc: "One-click live latency and reachability test to 48 well-known sites — verify your split-routing rules and line quality.", groups: { cn: "China", jp: "Japan", us: "US", global: "Global" }, reachable: "Reachable", avg: "avg", refresh: "Refresh", timeout: "timeout", footnote: "Tests run locally in your browser: lightweight probes (favicon / 204 endpoints), two samples, median taken. 'Timeout' usually means the site is blocked by your network or the route is down; fast China-direct vs proxied international latency shows whether split routing works as expected." };
+
+en.cf = { title: "Cloudflare Check", desc: "Claude and many critical services sit behind Cloudflare. This page compares /cdn-cgi/trace across multiple CF sites: exit IP, edge colo and protocol stack consistency reveal split-routing leaks and WARP status at a glance — plus live Turnstile / reCAPTCHA trust tests for your exit.", matrixTitle: "Multi-site trace comparison", refresh: "Re-run", probing: "Probing…", failed: "Failed/blocked", col: { site: "Site", ip: "Exit IP", colo: "Colo", loc: "Loc", warp: "WARP", http: "HTTP", tls: "TLS", sni: "SNI", kex: "Key exchange", ms: "Latency" }, locMismatch: "loc country differs from colo country", consistencyIp: "Exit IP across sites", consistencyColo: "Edge colo across sites", consistent: "consistent", inconsistent: "inconsistent (split-routing differs)" };
+
+en.status = { title: "Service Status", desc: "Aggregates the official status pages of AI and developer services — when Claude won't load, check here first: is it your route, or are they actually down? Data from each service's official statuspage, refreshed every 5 minutes.", allOk: "operational", updated: "updated", refresh: "Refresh", loading: "Loading…", loadFailed: "Failed to load status, try again later", attention: "Needs attention", groups: { ai: "AI services", dev: "Developer platforms", app: "Apps" }, ind: { none: "Operational", minor: "Minor issue", major: "Major outage", critical: "Critical outage", maintenance: "Maintenance", unknown: "Unknown" } };
+
+en.gpt = { title: "GPT Exit Check", desc: "Probes the real exit your traffic uses for ChatGPT / OpenAI API, then rates that exit's purity and AI / social / TikTok fitness — account survival starts with a clean route.", exitTitle: "OpenAI-site exits", refresh: "Re-run", probing: "Probing…", unreachable: "Unreachable (no direct route or not proxied)", mismatch: "Exits differ between the two sites: ChatGPT and the API are taking different routes — check your split-routing rules", err: { unreachable: "Cannot probe the chatgpt.com exit: make sure OpenAI sites are reachable", intelFailed: "Exit intel lookup failed, try again later" }, trustLabel: "Exit purity", sceneLabel: "Scenario fitness", scenes: { ai: "AI platforms", social: "Social media", tiktok: "TikTok" }, grades: { pure: "Pure", good: "Good", fair: "Fair", poor: "Poor", bad: "High risk" }, geo: "Geo", type: "Type", nonNative: "broadcast IP (non-native)", riskFlags: "Risk flags", clean: "None", datacenter: "Datacenter" };
+
+en.whois = { title: "WHOIS / RDAP Lookup", desc: "Look up registration info for domains, IPs or ASNs: registrar, created/expiry dates, nameservers, IP range ownership. Data via the RDAP bootstrap (rdap.org), straight from each registry's authoritative source.", placeholder: "Domain / IP / ASN, e.g. openai.com, 1.1.1.1, AS13335", query: "Lookup", examples: ["openai.com", "1.1.1.1", "AS13335", "104.21.0.1"], kind: { domain: "Domain", ip: "IP", asn: "ASN" }, range: "Range", country: "Country", typeLabel: "Type", statusLabel: "Status", entities: "Entities", events: { reg: "Registered", exp: "Expires", changed: "Last changed", rdapUpdate: "RDAP updated" }, err: { invalid: "Invalid format: enter a domain, IPv4/IPv6 address or AS number (e.g. AS13335)", not_found: "Record not found", network: "Lookup failed, try again later" } };

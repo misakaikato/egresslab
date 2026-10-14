@@ -27,7 +27,12 @@ npm run dev                       # 开发
 ## 功能
 
 - **出口探测**:claude.ai / api.anthropic.com / platform.claude.com 三域名 `/cdn-cgi/trace`,读出口 IP、地区、WARP、colo
-- **IP 情报聚合**(服务端,免费源):ipwho.is、ip-api.com、rdap.org、Tor 官方出口表、DNSBL(barracuda/sorbs);可选 `PROXYCHECK_API_KEY` / `ABUSEIPDB_API_KEY`(env)
+- **分流矩阵**:45 个知名站点按预期路线(直连/代理)分组探测,验证分流规则是否生效(首页 Pro 视图)
+- **IP 纯净度评分**:0-100 单值评分(Trust Score),Tor/代理/VPN/机房/滥用/黑名单逐项扣分,IP 页展示
+- **IP 情报聚合**(服务端,免费源):ipwho.is、ip-api.com、rdap.org、Tor 官方出口表、DNSBL 12 区加权明细(spamhaus/spamcop/barracuda/sorbs 等);可选 `PROXYCHECK_API_KEY` / `ABUSEIPDB_API_KEY`(env)
+- **场景适配评分**:AI 平台 / 社媒运营 / TikTok 三场景 0-10 分(TikTok 对机房 IP 零容忍)
+- **BGP 情报**:前缀数、直接上游与 Tier-1 占比(RIPEstat,7 天缓存)
+- **多源地理对照**:各数据源定位互相比对,坐标最大偏移超阈值即标记
 - **WebRTC 泄漏**:5 公共 STUN,收集公网候选与 Claude 出口比对
 - **大陆环境 7 信号**(纯本地):时区/语言/中文字体/厂商字体/国产浏览器/国产设备/Intl
 - **六维评分**:网络 35 · 暴露 20 · 信誉 15 · 一致性 15 · 浏览器 10 · 自动化 5,含地区门控
@@ -37,6 +42,11 @@ npm run dev                       # 开发
 - **检测历史**:本机 localStorage 记录每次检测的评分/结论/趋势,不上传
 - **浏览器指纹**:36 因子(Canvas/WebGL×2/WebGPU/Audio×2/字体双通道/解码器/语音/UA-CH/Emoji/键盘/Intl/WASM/WebCodecs/SDP/时钟偏移/HTTP头序等)+ 9 项伪装矛盾交叉检测,估算熵约 150 位,全本地计算
 - **风控链路对照**:注册→登录→KYC→支付→运行时五阶段端点地图 + 错误码速查(社区逆向知识层,工具不调用)
+- **网络连通性页**(`/link`):48 站分四组(中/日/美/全球)实时延迟,两轮取样取中位
+- **Cloudflare 检测页**(`/cloudflare`):7 个 CF 站点 trace 对比(出口 IP/colo 城市/HTTP/TLS/SNI/密钥交换),一致性判定 + Turnstile/reCAPTCHA 实测
+- **服务状态页**(`/status`):聚合 15 个 AI/开发者服务官方 statuspage,故障置顶,5 分钟缓存
+- **GPT 出口检测页**(`/gpt`):探测 ChatGPT / OpenAI API 真实出口,给出纯净度与场景适配分
+- **WHOIS/RDAP 查询页**(`/whois`):域名 / IP / ASN 三路查询,结构化展示注册信息与实体
 - 三语 zh / en / ja,明暗双主题
 
 ## API

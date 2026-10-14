@@ -416,3 +416,47 @@ ja.ipPage = { queryBtn: "IP 検索", unsupported: "地域非対応", intelTitle:
 ja.share = { btn: "共有リンク", copied: "リンク复制済", readonly: "読み取り専用", title: "ExitLens レポート" };
 
 ja.scoringPage = { title: "スコアリング説明", intro: "総合スコアは 6 次元の加重平均(0-100・高いほど安全)。重みとゲートは本プロジェクトの独自設計。この訪問で露呈したネットワークとブラウザ環境を反映し、アカウント自体や公式判定ではない。", dimsTitle: "次元の重み", gatesTitle: "ハードゲート(加重より優先)", g1: "出口地域が Anthropic 対象外 → 0 点", g2: "claude.ai 到達不可 → 上限 30", g3: "CF エッジ挑戦 / 地域矛盾 → 上限 60 / 45", levelsTitle: "レベル閾値", coverageNote: "未測定次元は分母から除外。カバー 85% 未満は最高 watch。", srcTitle: "データソース" };
+
+ja.matrix = {
+  title: "サイト別分流テスト",
+  desc: "40+ の Cloudflare 前置サイトに trace プローブを送り、各サイトから見える出口 IP を可視化——サイトごとに IP が異なれば分流が有効。非 CF サイトは到達性のみ。",
+  exitSummary: "{n} 個の分流出口を検出(クリックで IP 品質を検査)",
+  clickIp: "この IP のインテルとスコアを見る",
+  cats: { cn: "中国直結", ai: "AI", social: "ソーシャル", crypto: "暗号資産", tools: "ツール/SaaS", static: "静的 CDN", dev: "開発", media: "メディア", speed: "Cloudflare 網" },
+  noIp: "到達可(非CF)",
+  pending: "待機",
+  unreachable: "到達不可",
+  footnote: "{ok}/{total} サイト到達可、うち {traced} が出口 IP を返却。同じ出口 IP を共有するサイトが多いほど、その出口の分流範囲が広い。",
+};
+
+ja.trust = {
+  title: "IP 純度",
+  hint: "100 満点、高いほどクリーン。VPN/プロキシ/Tor/データセンター/滥用/ブラックリスト/近隣/ネイティブ性を加重減点",
+  grades: { pure: "純粋", good: "良好", fair: "普通", poor: "やや危険", bad: "高危険" },
+  clean: "減点項目なし",
+  factors: {
+    tor: "Tor 出口", resproxy: "住宅プロキシ", proxy: "公開プロキシ", vpn: "VPN", officialExit: "公共リレー",
+    datacenter: "DC IP", asnHosting: "ホスティング/転接 ASN", abuser: "滥用記録", abuse: "滥用スコア",
+    blacklist: "ブラックリスト", neighbors: "/24 近隣にフラグ", nonNative: "非ネイティブ IP", freshPrefix: "新規アナウンス prefix",
+  },
+};
+
+ja.dnsbl = { title: "脅威・スパムブラックリスト (DNSBL)", listed: "掲載", clean: "クリーン", cats: { spam: "スパム", reputation: "評判", botnet: "ボットネット", malware: "マルウェア", proxy: "プロキシ/Tor" }, summary: "{total} ゾーン · {hit} 件掲載" };
+
+ja.scenes = { title: "シーン適合度", note: "10 点満点、高いほど適合。IP 属性・ネイティブ性・評判からの推定で、公式判定ではない", ids: { ai: "AI アプリ", social: "SNS 運用", tiktok: "TikTok" }, grades: { excellent: "最高", recommended: "推奨", usable: "使用可", marginal: "条件付き", notRecommended: "非推奨" } };
+
+ja.bgp = { title: "BGP ルーティング拓扑", holder: "ASN 保有者", prefixes: "アナウンス prefix", upstreams: "直接アップストリーム(経路シェア)", tier1: "Tier 1 バックボーン", noData: "BGP 観測データなし", src: "データ:RIPEstat RIS プローブ" };
+
+ja.geoCmp = { title: "地理位置(マルチソース比較)", maxOffset: "最大偏移", km: "km", note: "DB 間の都市レベルのズレは正常。大きな偏移や国不一致はエニーキャスト/再割当の兆候" };
+
+ja.ports = { label: "开放ポート", none: "常见ポートは全て閉", off: "未検査(デフォルト off:ローカルプロキシ経由では全ポート开放に見えるため。直結サーバーでは PORTSCAN=1 で有効化)", hint: "住宅/クリーン出口 IP は SSH 22 等を閉じ、サーバー特徴と見なされないように" };
+
+ja.conn = { title: "ネットワーク疎通性", desc: "全球 48 の知名サイトへのリアルタイム疎通と遅延を一括テスト——分流ルールの有効性と回線品質の確認に。", groups: { cn: "中国", jp: "日本", us: "米国", global: "グローバル" }, reachable: "到達可", avg: "平均", refresh: "更新", timeout: "タイムアウト", footnote: "テストはブラウザ本地で実行:各站への軽量プローブ(favicon / 204)、2 回采样の中央値。タイムアウトは屏蔽または回線不通を示す。国内直結と国際プロキシの差で分流を検証できる。" };
+
+ja.cf = { title: "Cloudflare 検査", desc: "Claude をはじめ多くの关键サービスは Cloudflare 上にあります。複数の CF サイトで /cdn-cgi/trace を比較:出口 IP・エッジノード(colo)・プロトコルスタックの一致性から分流の洩れや WARP 状态を一目で確認し、Turnstile / reCAPTCHA で CF の信頼度を実測します。", matrixTitle: "複数サイト trace 比較", refresh: "再検査", probing: "プローブ中…", failed: "失敗/ブロック", col: { site: "サイト", ip: "出口 IP", colo: "エッジ", loc: "地域", warp: "WARP", http: "HTTP", tls: "TLS", sni: "SNI", kex: "键交換", ms: "遅延" }, locMismatch: "loc と colo の国が不一致", consistencyIp: "各サイトの出口 IP", consistencyColo: "各サイトのエッジノード", consistent: "一致", inconsistent: "不一致(分流に差異)" };
+
+ja.status = { title: "サービス状態", desc: "AI・開発者向けサービスの公式ステータスを集約——Claude に繋がらない時はまずここ:回線の問題か、向こうの障害か。各サービスの公式 statuspage から 5 分毎に取得。", allOk: "件正常", updated: "更新", refresh: "更新", loading: "読み込み中…", loadFailed: "状態の取得に失敗しました", attention: "要注意", groups: { ai: "AI サービス", dev: "開発者プラットフォーム", app: "アプリ" }, ind: { none: "正常", minor: "軽微な障害", major: "重大な障害", critical: "緊急障害", maintenance: "計画メンテ", unknown: "不明" } };
+
+ja.gpt = { title: "GPT 出口検査", desc: "ChatGPT / OpenAI API アクセス時の実際の出口を直接プローブし、その出口の純度と AI / 社媒 / TikTok シーン適合度を評価——アカウントの安定はまず経路のクリーンさから。", exitTitle: "OpenAI 系サイトの出口", refresh: "再検査", probing: "プローブ中…", unreachable: "到達不可(直結不可またはプロキシ未経由)", mismatch: "2 サイトで出口が不一致:ChatGPT と API が別経路——分流ルールを確認してください", err: { unreachable: "chatgpt.com の出口をプローブできません:OpenAI 系サイトへの接続を確認", intelFailed: "出口情報の取得に失敗しました" }, trustLabel: "出口純度", sceneLabel: "シーン適合", scenes: { ai: "AI 平台", social: "SNS 運用", tiktok: "TikTok" }, grades: { pure: "純粋", good: "良好", fair: "普通", poor: "不良", bad: "高リスク" }, geo: "地域", type: "タイプ", nonNative: "ブロードキャスト IP(非ネイティブ)", riskFlags: "リスク標識", clean: "なし", datacenter: "データセンター" };
+
+ja.whois = { title: "WHOIS / RDAP 検索", desc: "ドメイン・IP・ASN の登録情報を検索:レジストラ、登録/期限日、ネームサーバー、IP 帯の帰属。RDAP ブートストラップ(rdap.org)経由で各レジストリの権威ソースから取得。", placeholder: "ドメイン / IP / ASN 例:openai.com、1.1.1.1、AS13335", query: "検索", examples: ["openai.com", "1.1.1.1", "AS13335", "104.21.0.1"], kind: { domain: "ドメイン", ip: "IP", asn: "ASN" }, range: "アドレス帯", country: "国/地域", typeLabel: "タイプ", statusLabel: "状態", entities: "関連エンティティ", events: { reg: "登録日", exp: "期限日", changed: "最終変更", rdapUpdate: "RDAP 更新" }, err: { invalid: "形式が無効です:ドメイン、IPv4/IPv6、AS 番号(例 AS13335)を入力", not_found: "レコードが見つかりません", network: "検索に失敗しました" } };

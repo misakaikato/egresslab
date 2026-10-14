@@ -19,3 +19,24 @@ export function coloToCountry(colo: string): string | null {
   if (!colo) return null;
   return COLOS[colo.trim().toUpperCase()] || null;
 }
+
+// colo 代码 → 城市名(常见节点精选;未收录返回 null)
+const COLO_CITY: Record<string, string> = {
+  SJC: "San Jose", LAX: "Los Angeles", SEA: "Seattle", ORD: "Chicago", DFW: "Dallas", IAD: "Ashburn", ATL: "Atlanta", MIA: "Miami", EWR: "Newark", BOS: "Boston", DEN: "Denver", PHX: "Phoenix", MSP: "Minneapolis", PDX: "Portland", IAH: "Houston", SMF: "Sacramento", SLC: "Salt Lake City", STL: "St. Louis", DTW: "Detroit", TPA: "Tampa", PHL: "Philadelphia", CLT: "Charlotte", AUS: "Austin", SAN: "San Diego", LAS: "Las Vegas",
+  YVR: "Vancouver", YYZ: "Toronto", YWG: "Winnipeg", YUL: "Montreal", YYC: "Calgary",
+  MEX: "Mexico City", QRO: "Queretaro",
+  GRU: "Sao Paulo", GIG: "Rio de Janeiro", EZE: "Buenos Aires", SCL: "Santiago", BOG: "Bogota", LIM: "Lima",
+  LHR: "London", MAN: "Manchester", EDI: "Edinburgh",
+  DUB: "Dublin", AMS: "Amsterdam", FRA: "Frankfurt", DUS: "Dusseldorf", MUC: "Munich", BER: "Berlin", HAM: "Hamburg", CDG: "Paris", MRS: "Marseille", MAD: "Madrid", BCN: "Barcelona", LIS: "Lisbon", MXP: "Milan", FCO: "Rome", ZRH: "Zurich", GVA: "Geneva", VIE: "Vienna", ARN: "Stockholm", OSL: "Oslo", CPH: "Copenhagen", HEL: "Helsinki", WAW: "Warsaw", PRG: "Prague", BUD: "Budapest", OTP: "Bucharest", SOF: "Sofia", ATH: "Athens", BEG: "Belgrade", ZAG: "Zagreb", KEF: "Reykjavik", RIX: "Riga", TLL: "Tallinn", VNO: "Vilnius",
+  IST: "Istanbul", DXB: "Dubai", DOH: "Doha", KWI: "Kuwait City", BAH: "Manama", RUH: "Riyadh", JED: "Jeddah", TLV: "Tel Aviv", AMM: "Amman",
+  BOM: "Mumbai", MAA: "Chennai", BLR: "Bengaluru", DEL: "New Delhi", CCU: "Kolkata", HYD: "Hyderabad", DAC: "Dhaka", KHI: "Karachi", CMB: "Colombo",
+  SIN: "Singapore", KUL: "Kuala Lumpur", BKK: "Bangkok", HKG: "Hong Kong", SGN: "Ho Chi Minh City", HAN: "Hanoi", MNL: "Manila", CGK: "Jakarta", DPS: "Denpasar",
+  NRT: "Tokyo", KIX: "Osaka", FUK: "Fukuoka", CTS: "Sapporo", ICN: "Seoul", TPE: "Taipei", KHH: "Kaohsiung",
+  SYD: "Sydney", MEL: "Melbourne", PER: "Perth", BNE: "Brisbane", ADL: "Adelaide", AKL: "Auckland", WLG: "Wellington",
+  JNB: "Johannesburg", CPT: "Cape Town", NBO: "Nairobi", LOS: "Lagos", DAR: "Dar es Salaam",
+};
+
+export function coloToCity(colo: string): string | null {
+  if (!colo) return null;
+  return COLO_CITY[colo.trim().toUpperCase()] || null;
+}

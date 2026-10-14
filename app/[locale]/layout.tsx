@@ -38,6 +38,8 @@ export default async function LocaleLayout({ children, params }: { children: Rea
               </a>
               <a href={`/${locale}/card`} className="text-xs text-muted hover:text-accent hidden sm:inline">{dict(locale).cardPage.title}</a>
               <a href={`/${locale}/scoring`} className="text-xs text-muted hover:text-accent hidden sm:inline">{dict(locale).scoringPage.title}</a>
+              <a href={`/${locale}/link`} className="text-xs text-muted hover:text-accent hidden sm:inline">{dict(locale).conn.title}</a>
+              <a href={`/${locale}/cloudflare`} className="text-xs text-muted hover:text-accent hidden md:inline">{dict(locale).cf.title}</a>
               <span className="text-xs text-muted hidden sm:inline">{dict(locale).nav.tag}</span>
             </div>
             <div className="flex items-center gap-2">
@@ -49,9 +51,18 @@ export default async function LocaleLayout({ children, params }: { children: Rea
         </header>
         <main className="flex-1">{children}</main>
         <footer className="border-t border-line mt-16">
-          <div className="max-w-5xl mx-auto px-5 py-6 flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
-            <span>{dict(locale).footer.privacy}</span>
-            <span>{dict(locale).footer.selfhost}</span>
+          <div className="max-w-5xl mx-auto px-5 py-6 space-y-2 text-xs text-muted">
+            <div className="flex flex-wrap gap-x-4 gap-y-1">
+              <a href={`/${locale}/link`} className="hover:text-accent">{dict(locale).conn.title}</a>
+              <a href={`/${locale}/cloudflare`} className="hover:text-accent">{dict(locale).cf.title}</a>
+              <a href={`/${locale}/status`} className="hover:text-accent">{dict(locale).status.title}</a>
+              <a href={`/${locale}/gpt`} className="hover:text-accent">{dict(locale).gpt.title}</a>
+              <a href={`/${locale}/whois`} className="hover:text-accent">{dict(locale).whois.title}</a>
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span>{dict(locale).footer.privacy}</span>
+              <span>{dict(locale).footer.selfhost}</span>
+            </div>
           </div>
         </footer>
       </body>

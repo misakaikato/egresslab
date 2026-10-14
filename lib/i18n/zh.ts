@@ -422,3 +422,47 @@ zh.ipPage = { queryBtn: "查询 IP", unsupported: "地区不受支持", intelTit
 zh.share = { btn: "分享链接", copied: "链接已复制", readonly: "只读分享", title: "ExitLens 检测报告" };
 
 zh.scoringPage = { title: "评分说明", intro: "总分为六个维度的加权平均(0-100,越高越稳);权重与门控为本项目自定义设计。评分反映本次访问暴露的网络与浏览器环境,不评估账号本身,也不代表任何平台的官方判定。", dimsTitle: "六维权重", gatesTitle: "硬性门控(优先于加权)", g1: "出口地区不在 Anthropic 支持列表 → 0 分(地区受限)", g2: "claude.ai 不可达 → 上限 30 分", g3: "被 Cloudflare 边缘挑战 / 地区判定冲突 → 上限 60 / 45 分", levelsTitle: "等级阈值", coverageNote: "未能测量的维度不计入分母;覆盖度低于 85% 时最高只给 watch 级。", srcTitle: "数据源" };
+
+zh.matrix = {
+  title: "网站分流测试",
+  desc: "向 40+ 个 Cloudflare 前置站点逐一发 trace 探测,还原每个网站看到的出口 IP——不同站点返回不同 IP 即分流生效;非 CF 站点仅测连通性。",
+  exitSummary: "共发现 {n} 个分流出口(点击查询 IP 质量)",
+  clickIp: "查询该 IP 的情报与评分",
+  cats: { cn: "国内直连", ai: "AI", social: "社交", crypto: "加密货币", tools: "工具/SaaS", static: "静态资源", dev: "开发", media: "媒体", speed: "Cloudflare 网络" },
+  noIp: "连通(非CF)",
+  pending: "待检测",
+  unreachable: "不可达",
+  footnote: "{ok}/{total} 站点可达,其中 {traced} 站回显了出口 IP。同一出口 IP 覆盖的站点越多,说明该出口承载的分流范围越大。",
+};
+
+zh.trust = {
+  title: "IP 纯净度",
+  hint: "满分 100,越高越纯净;由 VPN/代理/Tor/机房/滥用/黑名单/邻居/原生性等信号加权扣减",
+  grades: { pure: "纯净", good: "良好", fair: "一般", poor: "较差", bad: "高危" },
+  clean: "未发现扣分项",
+  factors: {
+    tor: "Tor 出口", resproxy: "住宅代理", proxy: "公开代理", vpn: "VPN", officialExit: "公共出口服务",
+    datacenter: "机房 IP", asnHosting: "ASN 为托管/转接", abuser: "有滥用记录", abuse: "滥用举报分",
+    blacklist: "黑名单命中", neighbors: "同网段邻居被标记", nonNative: "非原生 IP", freshPrefix: "前缀新近宣告",
+  },
+};
+
+zh.dnsbl = { title: "全球威胁与垃圾邮件黑名单 (DNSBL)", listed: "黑名单", clean: "纯净", cats: { spam: "垃圾邮件", reputation: "声誉", botnet: "僵尸网络", malware: "恶意代码", proxy: "代理/Tor" }, summary: "{total} 个检测源 · {hit} 个命中" };
+
+zh.scenes = { title: "场景评估", note: "满分 10 分,越高越适合;由 IP 属性、原生性与信誉推导的粗略预判,非平台官方数据", ids: { ai: "AI 应用", social: "社媒运营", tiktok: "TikTok" }, grades: { excellent: "极佳", recommended: "推荐", usable: "可用", marginal: "可以尝试", notRecommended: "不推荐" } };
+
+zh.bgp = { title: "BGP 路由拓扑", holder: "ASN 归属", prefixes: "宣告前缀", upstreams: "直接上游(路径占比)", tier1: "Tier 1 骨干", noData: "暂无 BGP 观测数据", src: "数据:RIPEstat RIS 探针观测" };
+
+zh.geoCmp = { title: "地理位置(多源对比)", maxOffset: "最大偏移", km: "公里", note: "同一 IP 的城市归属在不同数据库间存在偏移属正常;偏移过大或国家不一致是分流/广播段的信号" };
+
+zh.ports = { label: "开放端口", none: "常见端口均未开放", off: "未检测(默认关闭:本机代理会让所有端口显示为开放,只有直连无代理的服务器部署才有意义,用 PORTSCAN=1 开启)", hint: "家宽/纯净落地 IP 建议关闭 SSH 22 等常见端口,防止被深度识别为服务器行为" };
+
+zh.conn = { title: "网络连通性", desc: "一键测试当前网络到全球 48 个知名站点的实时连通性与延迟,用来判断分流规则是否生效、线路是否通畅。", groups: { cn: "中国", jp: "日本", us: "美国", global: "全球" }, reachable: "可达", avg: "平均", refresh: "刷新", timeout: "超时", footnote: "测试在你的浏览器本地进行:向各站发轻量探测(favicon / 204 端点),两轮取样取中位数。「超时」通常意味着该站被当前网络屏蔽或线路不通;国内站直连快、国际站走代理的差异,正好可以验证分流是否符合预期。" };
+
+zh.cf = { title: "Cloudflare 检测", desc: "Claude 与大量关键服务都架在 Cloudflare 上。本页对多个 CF 站点做 /cdn-cgi/trace 对比:出口 IP、边缘节点(colo)、协议栈是否一致,一眼看出分流是否串线、WARP 是否开启,并用 Turnstile / reCAPTCHA 实测 CF 对你这条出口的信任度。", matrixTitle: "多站点 trace 对比", refresh: "重新检测", probing: "探测中…", failed: "失败/被拦截", col: { site: "站点", ip: "出口 IP", colo: "边缘节点", loc: "地区", warp: "WARP", http: "HTTP", tls: "TLS", sni: "SNI", kex: "密钥交换", ms: "延迟" }, locMismatch: "loc 与 colo 国家不一致", consistencyIp: "各站出口 IP", consistencyColo: "各站边缘节点", consistent: "一致", inconsistent: "不一致(存在分流差异)" };
+
+zh.status = { title: "服务状态", desc: "聚合 AI 与开发者常用服务的官方状态页——登不上 Claude 时,先来这里看一眼:是你线路的问题,还是它真的挂了。数据来自各服务官方 statuspage,每 5 分钟刷新。", allOk: "项运行正常", updated: "更新于", refresh: "刷新", loading: "加载中…", loadFailed: "状态加载失败,请稍后重试", attention: "需要注意", groups: { ai: "AI 服务", dev: "开发者平台", app: "常用应用" }, ind: { none: "正常", minor: "轻微故障", major: "严重故障", critical: "紧急故障", maintenance: "计划维护", unknown: "未知" } };
+
+zh.gpt = { title: "GPT 出口检测", desc: "直接探测你访问 ChatGPT / OpenAI API 时走的真实出口,并给出这条出口的纯净度评分与 AI / 社媒 / TikTok 场景适配分——账号能不能稳住,先看这条路干不干净。", exitTitle: "OpenAI 系站点出口", refresh: "重新检测", probing: "探测中…", unreachable: "不可达(当前网络无法直连或未走代理)", mismatch: "两个站点出口不一致:ChatGPT 与 API 走了不同线路,注意分流规则是否按预期生效", err: { unreachable: "无法探测 chatgpt.com 出口:请确认网络可访问 OpenAI 系站点", intelFailed: "出口情报查询失败,请稍后重试" }, trustLabel: "出口纯净度", sceneLabel: "场景适配", scenes: { ai: "AI 平台", social: "社媒运营", tiktok: "TikTok" }, grades: { pure: "纯净", good: "良好", fair: "一般", poor: "较差", bad: "高风险" }, geo: "地理", type: "类型", nonNative: "广播 IP(非原生)", riskFlags: "风险标记", clean: "无", datacenter: "机房" };
+
+zh.whois = { title: "WHOIS / RDAP 查询", desc: "查域名、IP 或 ASN 的注册信息:注册商、注册/到期时间、名称服务器、IP 段归属。数据来自 RDAP 引导服务(rdap.org),直达各注册局权威源。", placeholder: "输入域名 / IP / ASN,如 openai.com、1.1.1.1、AS13335", query: "查询", examples: ["openai.com", "1.1.1.1", "AS13335", "104.21.0.1"], kind: { domain: "域名", ip: "IP", asn: "ASN" }, range: "地址段", country: "国家/地区", typeLabel: "类型", statusLabel: "状态", entities: "相关实体", events: { reg: "注册时间", exp: "到期时间", changed: "最近变更", rdapUpdate: "RDAP 更新" }, err: { invalid: "格式无效:请输入域名、IPv4/IPv6 地址或 AS 号(如 AS13335)", not_found: "未找到记录", network: "查询失败,请稍后重试" } };

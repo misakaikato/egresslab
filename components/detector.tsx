@@ -5,6 +5,7 @@ import { dict } from "@/lib/i18n/config";
 import { computeScore } from "@/lib/score";
 import type { IntelResult, ScoreInput, TraceProbe, WebRtcResult } from "@/lib/types";
 import { probeTrace, ANTHROPIC_HOSTS } from "@/lib/detect/trace";
+import { probeSiteMatrix, matrixExits, type SiteProbe } from "@/lib/detect/sitematrix";
 import { probeDirect, distinctExits, recordExit, type HistoryVerdict, type EchoResult } from "@/lib/detect/direct";
 import { probeAiPack } from "@/lib/detect/aipack";
 import { collectFingerprint, type FingerprintResult } from "@/lib/detect/fingerprint";
@@ -34,6 +35,7 @@ import SpeedCard from "./SpeedCard";
 import HeadersCard from "./HeadersCard";
 import EchoMatrixCard from "./EchoMatrixCard";
 import RecaptchaCard from "./RecaptchaCard";
+import SiteMatrixCard from "./SiteMatrixCard";
 import { inferConclusions } from "@/lib/inference";
 import FingerprintPanel from "./FingerprintPanel";
 import { buildVerdicts, headline, type Tone } from "@/lib/verdicts";
@@ -51,6 +53,7 @@ export default function Detector({ locale }: { locale: string }) {
   const [direct, setDirect] = useState<{ ip: string; via: string; exits: EchoResult[] }>({ ip: "", via: "", exits: [] });
   const [history, setHistory] = useState<HistoryVerdict | null>(null);
   const [aiPack, setAiPack] = useState<TraceProbe[] | null>(null);
+  const [matrix, setMatrix] = useState<SiteProbe[] | null>(null);
   const [fp, setFp] = useState<FingerprintResult | null>(null);
   const [scans, setScans] = useState<ScanRecord[]>([]);
   const [dual, setDual] = useState<{ v4: StackInfo | null; v6: StackInfo | null }>({ v4: null, v6: null });
@@ -101,6 +104,7 @@ export default function Detector({ locale }: { locale: string }) {
       setDnsLeak(s.dnsLeak ?? null);
       if (s.fp) setFp(s.fp);
       if (s.aiPack) setAiPack(s.aiPack);
+      if (s.siteMatrix) setMatrix(s.siteMatrix);
       if (s.rep) setRep(s.rep);
       if (s.history) setHistory(s.history);
       setRestoredAt(s.ts);
@@ -143,6 +147,7 @@ export default function Detector({ locale }: { locale: string }) {
     const envP = scanEnvironment();
     const dnsP = checkDns();
     const aiP = probeAiPack();
+    const matrixP = probeSiteMatrix(7000).catch(() => null);
     const fpP = collectFingerprint().catch(() => null);
 
     // 情报早触发:claude.ai trace 或 直连回显 先到先用
@@ -176,12 +181,13 @@ export default function Detector({ locale }: { locale: string }) {
     const dnsLeakP = runDnsLeak(traceList[0]?.country || "").catch(() => null);
 
     // 泄漏与环境组
-    const [webrtcR, envR, dnsR, aiR, fpR] = await Promise.all([webrtcP, envP, dnsP, aiP, fpP]);
+    const [webrtcR, envR, dnsR, aiR, fpR, matrixR] = await Promise.all([webrtcP, envP, dnsP, aiP, fpP, matrixP]);
     setWebrtc(webrtcR);
     setEnv(envR);
     setDns(dnsR);
     setAiPack(aiR);
     setFp(fpR);
+    setMatrix(matrixR);
     setAuto(collectAutomation());
     setStepBits((b) => b | 0b1000);
     // 连通性组(claude 可达性 + AI 包)
@@ -217,6 +223,7 @@ export default function Detector({ locale }: { locale: string }) {
           dnsLeak: await dnsLeakP,
           fp: fpR,
           aiPack: aiR,
+          siteMatrix: matrixR,
           rep: repV,
           history: histV,
         })
@@ -362,6 +369,12 @@ export default function Detector({ locale }: { locale: string }) {
       history: history ? { switches24h: history.switches24h, switches7d: history.switches7d, trail: history.trail } : null,
       reputation: rep,
       aiPack: aiPack ? aiPack.map((p) => ({ host: p.host, ok: p.status === "ok", ms: p.ms, ip: p.ip, colo: p.colo })) : null,
+      siteMatrix: matrix
+        ? {
+            exits: matrixExits(matrix),
+            sites: matrix.map((s) => ({ host: s.host, name: s.name, cat: s.cat, ok: s.status === "ok", ip: s.ip || null, country: s.country || null, ms: s.ms || null })),
+          }
+        : null,
     };
     let text: string;
     if (fmt === "json") {
@@ -383,6 +396,11 @@ export default function Detector({ locale }: { locale: string }) {
       if (snap.fingerprint) L.push(`\n## 指纹\n- ${snap.fingerprint.hash.slice(0, 16)} · 熵≈${snap.fingerprint.entropyBits}b · ${snap.fingerprint.components.length} 因子${snap.fingerprint.lies.length ? ` · 矛盾 ${snap.fingerprint.lies.length} 项` : ""}`);
       if (snap.history) L.push(`\n## 历史\n- 24h 切换 ${snap.history.switches24h} · 7d ${snap.history.switches7d} · 轨迹 ${snap.history.trail.join(" → ")}`);
       if (snap.aiPack) L.push(`\n## AI 连通\n${snap.aiPack.map((a) => `- ${a.ok ? "✓" : "✗"} ${a.host}${a.ms ? ` ${a.ms}ms` : ""}`).join("\n")}`);
+      if (snap.siteMatrix) {
+        L.push(`\n## 网站分流\n${snap.siteMatrix.exits.map((e) => `- 出口 ${e.ip} (${e.country || "??"}${e.warp ? " WARP" : ""}) × ${e.count} 站`).join("\n")}`);
+        const split = snap.siteMatrix.sites.filter((s) => s.ip && snap.siteMatrix!.exits.length > 1);
+        if (split.length) L.push(split.map((s) => `  · ${s.name} ${s.host} → ${s.ip}`).join("\n"));
+      }
       text = L.join("\n");
     }
     try {
@@ -715,6 +733,17 @@ export default function Detector({ locale }: { locale: string }) {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+      ) : null}
+
+      {/* 网站分流测试矩阵 */}
+      {matrix ? (
+        <section className="mt-4 fade-in">
+          <div className="card p-5">
+            <h3 className="text-sm font-semibold mb-1 flex items-center gap-2"><Map size={14} className="text-accent" />{t.matrix.title}</h3>
+            <p className="text-[11px] text-muted mb-3">{t.matrix.desc}</p>
+            <SiteMatrixCard sites={matrix} t={t.matrix} locale={locale} />
           </div>
         </section>
       ) : null}
